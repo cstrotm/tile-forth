@@ -1,0 +1,158 @@
+.TH LISTS 3X "August 6, 1990"
+.SH NAME
+lists \- single linked lists definitions
+.SH SYNOPSIS
+.B "#include lists.f83"
+.LP
+.B lists
+.SH DESCRIPTION
+This library supports definition and manipulation of single linked lists.
+The list is assumed to have a pointer field first in each element.
+The pointer gives access to the next element in the list. The list is
+terminated by "nil". 
+The 
+.IR tile
+forth kernel vocabulary chain is realized as a single linked lists of entries.
+.TP
+.B
+: ?empty-list ( list -- bool)
+Returns "true" if the list is empty else "false".
+.TP
+.B
+: ?map-list ( list block[element -- bool] -- )
+List conditional iterator function. The code block is called for each 
+element of the list while the block returns "false".
+.TP
+.B
+: ?member-list ( element list -- bool)
+Returns "true" if the element is a member of the list else "false".
+.TP
+.B
+: append-list ( element list -- )
+Appends the element last in the list. The list is searched first so
+that the element is not a member of the list. In this case no operation
+is performed.
+.TP
+.B
+: apply-list ( offset list -- )
+List iteration function accessing each element of the list at the
+given offset as a pointer field and executing the field as an entry.
+.TP
+.B
+: empty-list ( list -- )
+Assigns a list to become the empty list. The list will point to "nil".
+.TP
+.B
+: insert-list ( element list -- )
+Inserts the element into the list. If the list a list element the
+parameter element is inserted after.
+.TP
+.B
+: list ( -- )
+Used in the following form:
+.br
+.B list
+.I <list-name>
+.B ( -- addr)
+.br
+to create a list header. The header is initiated to "nil".
+.TP
+.B
+: map-list ( list block[element -- ] -- )
+List iterator function. The code block is called for each element of
+the list.
+.TP
+.B
+vocabulary lists ( -- )
+The single linked list extension vocabulary. Include into the vocabulary
+search set, "context", to allow access to these functions.
+.TP
+.B
+: size-list ( list -- num)
+Returns the size of the list, i.e., the number of element in the list.
+.SH INTERNALS 
+The
+.IR lists
+vocabulary contains the following private definition to search lists of
+append and check membership.
+.TP
+.B 
+: search-list ( element list -- [element last] or [false]) private
+Searches through the list after the element. If not found returns
+the searched and the last element so that the element may be inserted.
+If found returns "false".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR blocks(3X).
+.SH EXAMPLES
+The internal definition of a vocabulary entry in the
+.IR tile
+forth kernel has the following structure. The entry list may be
+manipulated with the "lists" extensions.
+.RS
+.LP
+.nf
+.B 
+#include structures.f83
+.B
+#include lists.f83
+.B
+#include blocks.f83
+.LP
+.B
+structures lists blocks
+.LP
+.B
+struct.type ENTRY ( -- )
+.B
+	ptr  +link ( entry -- addr)
+.B
+	ptr  +name ( entry -- addr)
+.B
+	long +mode ( entry -- addr)
+.B
+	long +code ( entry -- addr)
+.B
+	long +parameter ( entry -- addr)
+.B 
+struct.end
+.LP
+.B 
+last block[ ( entry -- ) . ]; map-list
+.fi
+.RE
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the entry
+is indicated together with the parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

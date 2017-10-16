@@ -1,0 +1,120 @@
+\
+\  INTEGER RANGE LIBRARY
+\
+\  Copyright (C) 1988-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 30 June 1988
+\
+\  Last updated on: 23 July 1990
+\
+\  Dependencies:
+\       (forth) forth, blocks, structures
+\
+\  Description:
+\       Allows definition and manipulation of integer ranges.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Ranges definitions...) cr
+
+#include blocks.f83
+#include structures.f83
+
+vocabulary ranges ( -- )
+
+blocks structures ranges definitions
+
+struct.type RANGE ( -- range)
+  long +to ( range -- addr) private
+  long +from ( range -- addr) private
+struct.end
+
+: range ( from to -- )
+  create , ,
+does> ( range -- from to)
+  2@
+;
+
+: ?member-range ( x from to -- bool)
+  ?within
+;
+
+: ?intersection-range ( from1 to1 from2 to2 -- bool)
+  -rot < >r swap < r> or not
+;
+
+: size-range ( from to -- int)
+  swap - 1+				
+;
+
+: union-range ( from1 to1 from2 to2 -- from3 to3)
+  rot max >r min r>
+;
+
+: intersection-range ( from1 to1 from2 to2 -- from3 to3)
+  rot min >r max r>
+;
+
+: map-range ( from to block[index -- ] -- )
+  swap 1+ rot do
+    i swap dup >r call r>
+  loop
+  drop
+;
+
+: ?map-range ( from to block[index -- bool] -- )
+  swap 1+ rot do
+    i swap dup >r call r> swap
+    if leave then
+  loop
+  drop
+;
+
+: .range ( from to -- )
+  ." [" swap 0 .r ." .." 0 .r ." ] "
+;
+
+: ?range ( str -- [from to true] or [str false])
+  >r 0 r@ dup c@ ascii [ =
+  if 1+ dup c@ ascii - =
+    if 1+ convert swap negate swap
+    else convert then
+    dup c@ ascii . = over c@ ascii . = and   
+    if 0 swap 2+ dup c@ ascii - =
+      if 1+ convert swap negate swap
+      else convert then
+      dup c@ ascii ] = swap 1+ c@ 0= and
+      if 2dup > not 
+	if r> drop compiling
+	  if swap [compile] literal then
+	  true exit
+	then
+      then
+    then
+  then
+  2drop r> false
+; recognizer
+
+forth only
+

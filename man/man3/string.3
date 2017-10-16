@@ -1,0 +1,113 @@
+.TH STRING 3X "September 7, 1990"
+.SH NAME
+string \- tile kernel null-terminated string functions
+.SH SYNOPSIS
+.B "string"
+.SH DESCRIPTION
+The 
+.IR tile
+forth kernel support word set for null-terminated strings.
+Used by the kernel to maintain strings in vocabularies, etc.
+Strings are not allocated from the forth dictionary.
+.TP
+.B 
+code " ( -- str) immediate
+Used in the following form:
+.br
+.B
+" 
+.I <any-string>
+.B
+"
+.br
+to compile a string literal. A string is not bounded by any size
+as it is null terminated. A double quote character cannot be part of
+the string.
+.TP
+.B
+code $print ( str -- )
+Displays a string on the current output device.
+.TP
+.B
+code $allot ( n -- str)
+Allocates storage for a string of max length "n". The 
+string may be reclaimed with the function "$free".
+.TP
+.B
+code $cat ( str1 str2 -- )
+Concatenates "str2" to "str1" and returns the pointer to
+"str2". "str2" is assumed to have space for "str1" and should
+have a minimum length of both strings.
+.TP
+.B
+code $dup ( str1 -- str1 str2)
+Returns copy of the parameter string. The copy is
+equivalent to the parameter but is allocated to another 
+memory area. The copy should be reclaimed with the function
+"$free".
+.TP
+.B 
+code $equal ( str1 str2 -- bool)
+Compares the two strings and returns "true" if they are 
+equal else "false".
+.TP
+.B
+code $free ( str -- )
+Returns allocated string storage to the run-time heap.
+.TP
+.B
+code $length ( str -- num)
+Returns the length of the string not counting the null
+character terminating the string. A string may have zero
+length.
+.TP
+.B
+code (") ( -- str) compilation
+Compiled run-time action for string literal. Pushes a pointer
+to the inline string onto the parameter stack. Compiled by
+the word """.
+.TP
+.B
+vocabulary string ( -- )
+Vocabulary containing the null-terminated string definitions.
+Include into the vocabulary search structure, "context", to
+allow access to these extensions.
+.\" .SH INTERNALS
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

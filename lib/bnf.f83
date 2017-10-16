@@ -1,0 +1,146 @@
+\
+\  BACKUS-NAUR FORM GRAMMAR DEFINITIONS
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 19 February 1990
+\
+\  Last updated on: 21 February 1990
+\
+\  Dependencies:
+\       (forth) forth, compiler, parser
+\
+\  Description:
+\       Definitions for Backus-Naur Meta Language grammar. Simplifies
+\       specification of grammar for the Parser Virtual Machine.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Backus-Naur Form definitions...) cr
+
+#include parser.f83
+
+parser forth definitions
+
+vocabulary backus-naur-form ( -- )
+
+symbol bnf
+
+forth compiler parser backus-naur-form definitions
+
+\ Semantic actions for building Extended Backus-Naur Form (EBNF) grammar
+
+variable current-syntax-symbol ( -- addr)
+
+: first-syntax ( symbol -- )
+  >body dup current-syntax-symbol ! syntax
+; 
+
+: next-syntax ( -- )
+  current-syntax-symbol @ syntax
+; 
+
+: make-non-terminal ( symbol -- )
+  thread compile non-terminal
+; 
+
+: make-terminal ( symbol -- )
+  thread compile terminal
+; 
+
+: make-zero-or-one ( symbol -- )
+  thread compile zero-or-one
+; 
+
+: make-zero-or-more ( symbol -- )
+  thread compile zero-or-more
+; 
+
+: make-semantic ( symbol -- )
+  compile semantic thread [compile] end.syntax
+; 
+
+: make-no-semantic ( -- )
+  compile no-semantic [compile] end.syntax
+; 
+
+\ Grammar definition for Backus-Naur Form (BNF)
+\
+\ <bnf> ::= <head> <tail> <bnf>
+\        |  <eoln>
+symbol head
+symbol tail 
+
+bnf syntax head non-terminal tail non-terminal bnf non-terminal no-semantic end.syntax 
+bnf syntax eoln non-terminal no-semantic end.syntax
+
+\ <head> ::= <factor> ::= @ first-syntax
+\         |  | @ next-syntax
+
+symbol factor 
+symbol :
+symbol =
+symbol |
+
+head syntax factor non-terminal : terminal : terminal = terminal semantic first-syntax end.syntax
+head syntax | terminal semantic next-syntax end.syntax
+
+\ <tail> ::= ' @ <entry> @ make-semantic
+\         |  <term> <tail>
+\         |  <empty> @ make-no-semantic
+
+symbol @ 
+symbol term 
+
+tail syntax @ terminal entry non-terminal semantic make-semantic end.syntax
+tail syntax term non-terminal tail non-terminal no-semantic end.syntax
+tail syntax empty non-terminal semantic make-no-semantic end.syntax
+
+\ <term> ::= [ <factor> ] @ make-zero-or-one
+\         |  { <factor> } @ make-zero-or-more
+\         |  ' ' <entry> @ make-terminal
+\         |  <factor> @ make-non-terminal
+\         |  <entry> @ make-terminal
+
+symbol [
+symbol ]
+symbol {
+symbol }
+symbol '
+
+term syntax [ terminal factor non-terminal ] terminal semantic make-zero-or-one end.syntax
+term syntax { terminal factor non-terminal } terminal semantic make-zero-or-more end.syntax
+term syntax ' terminal entry non-terminal semantic make-terminal end.syntax
+term syntax factor non-terminal semantic make-non-terminal end.syntax
+term syntax entry non-terminal semantic make-terminal end.syntax
+
+\ <factor> ::= ' < <entry> >
+
+symbol < 
+symbol > 
+
+factor syntax < terminal entry non-terminal > terminal no-semantic end.syntax
+
+forth only
+

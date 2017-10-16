@@ -1,0 +1,153 @@
+.TH MACROS 3X "August 6, 1990"
+.SH NAME
+macros \- macro expansion of colon definitions
+.SH SYNOPSIS
+.B "#include macros.f83"
+.LP
+.B "macros"
+.SH DESCRIPTION
+Allows definition of macro colon definitions to reduce the
+overhead of procedure calls at run-time to the price of memory.
+The macro package may be used, after profiling of an application,
+to mark the most critical low level definitions and hereby increase
+performance. Macro definition may also be used to create alias names
+for definitions.
+.TP
+.B
+: .macro ( -- )
+Used in the following form:
+.br
+.B .macro 
+.I <macro-name>
+.br
+to display the internal information about the macro definition.
+The information is displayed in the following form:
+.br
+.B macro#
+.I <macro-address>
+.B size:
+.I <macro-size>
+.B body:
+.I <macro-body-address>
+.br
+Use mainly for debugging and code verification purpose.
+.TP
+.B
+: macro ( -- )
+Used in the following form to mark the latest colon definition 
+as a macro:
+.br
+.B : 
+.I <macro-name> 
+.B ( ... )
+.B ...
+.I <macro-definition> 
+.B ...
+.B ; 
+.B macro
+.br
+Used in the same way as "immediate" and other mode classifiers.
+The code section is not restricted to sequential code. 
+Control structures, condition and iteration statements, are allowed
+as all branches are relative. Special care should be taken if the macro
+definition contains "exit", "tail-recurse" or "recurse" as the result
+is unpredictable when expanded.
+.TP
+.B
+vocabulary macros ( -- )
+Vocabulary containing the macro extension definitions. Include 
+into the vocabulary search chain, "context", to gain access to 
+this library.
+.SH INTERNALS
+Private definitions in the 
+.I macros
+vocabulary;
+.TP
+.B
+ptr +body ( macro -- addr) private
+Returns address of field in "MACRO" structure to pointer to code section
+of the macro. 
+.TP
+.B
+long +size ( macro -- addr) private
+Returns address of field in "MACRO" structure to byte size of macro code. 
+.TP
+.B
+struct.type MACRO ( body size -- ) private
+Structure definition used by "macro" to keep information about
+a macro code definition. Internal fields are "+body" and "+size".
+An instance of this structure will perform the run-time action for a
+macro definitions. If compilation state the macro body is expanded into
+the current definition otherwise the macro body is executed. All macro
+definitions are "immediate". The "MACRO" structure type contains the
+fields "+body" and "+size".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR internals(3X),
+.IR structures(3X).
+.SH EXAMPLES
+An example showing how to create macros for some additional
+relational operators:
+.RS
+.LP
+.nf
+.B 
+#include macros.f83
+.LP
+.B
+macros
+.LP
+.B
+: <> ( x y -- bool) = not ; macro
+.B 
+: >= ( x y -- bool) < not ; macro
+.B
+: <= ( x y -- bool) > not ; macro
+.fi
+.RE
+.LP
+The "macro" function may also be used to the allow simple aliasing and 
+renaming at very low execution cost.
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.SH WARNING
+A "macro" definition containing "exit" will work correctly in
+execution mode but expanded in a colon definition the "macro"
+will cause the definition to be exited. This is in most case not
+the wanted behavior. Special care should be taken for "macro"
+definitions which contain "exit", "recurse", and "tail-recurse".
+Also argument and local variables, and exception blocks should not
+be part of a macro colon definition.
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

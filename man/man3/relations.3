@@ -1,0 +1,243 @@
+.TH RELATIONS 3X "August 20, 1990"
+.SH NAME
+relations \- experimental library for data modeling as relations
+.SH SYNOPSIS
+.B "#include relations.f83"
+.LP
+.B "relations"
+.SH DESCRIPTION
+This library allow data represent in one of the most general forms of
+data modeling with unrestricted data and code sharing. Data is
+described as a relations, a triple: (item X relation X value). The 
+library supports some of the common iterators over the relation set.
+Depending on how the attribute is used the search for the attribute-value
+may be minimized. This implementation uses association lists where 
+the attribute-values is associated with the item. The items may act as
+both node with relations and as names of relations. The interface to
+this library is choosen so that internal implementation details are
+visible. This allows the library to be implemented in other forms such
+as hash-tables, mapping tables, trees, etc.
+.TP
+.B
+: .item ( item -- )
+Displays the item entry name to the current output stream. If the item
+is not bound to a entry the following form is used: "item#<address>".
+.TP
+.B
+: .items ( -- )
+Displays the current list of items to the current output stream.
+.TP
+.B
+: .relations ( item -- )
+Displays the current list of relations for the item on the current output
+stream.
+.TP
+.B
+: .values ( item -- )
+Displays the current list of attribute-value pairs associated with the item
+on the current output stream.
+.TP
+.B
+: ?avail-relations ( relation item -- bool)
+Returns "true" if the relation is available else "false".
+.TP
+.B
+: ?get-relation ( relation item -- [relation item false] or [value true])
+Returns the value of the relation of the item and "true" if found else
+this function will return the relation and the item and "false".
+.TP
+.B
+: ?is-relation ( value relation item -- bool)
+Returns "true" if the relation has the value given else "false". The values
+are tested with arithmetric equal.
+.TP
+.B
+struct.type ITEM ( -- )
+Structure type for an item. Used by "item" to create the internals
+of an item. The item is used both for relational data storage and as
+an attribute. The words "new-item" and "item" should be used to create
+"item" words. Contains three private structure fields; "+next-item", 
+"+entry", and "+associations".
+.TP
+.B
+: item ( -- )
+Used in the following form:
+.br
+.B item
+.I <name> 
+.B ( -- item)
+.br
+to create an item entry. The 
+.I <name> 
+will return the address of the item when used. The item may be used to
+associate value with and may also be used as a relation.
+.TP
+.B 
+variable items ( -- )
+Global variable in the "relations" extension holding the list of defined
+items (with the word "item"). The latest defined item occurs first in the
+list. This variable may be accessed and changed to create item sets.
+.TP
+.B
+: item>entry ( item -- entry)
+Returns the entry address of the item. This value may be "nil" depending
+on how the item was created.
+.TP
+.B
+: get-relation ( relation item -- value)
+Returns the value of the relation of the item. The value is assumed to
+exist. If the relation is not found this function will fail and a memory 
+access signal is generated.
+.TP
+.B
+: map-item ( item block[value relation -- ] -- )
+Used in the following form:
+.br
+.I <item>
+.B block[
+.B ( value relation -- )
+.B ...
+.B ];
+.B map-item
+.br
+to apply a block to each relation and value pair associated with an item.
+The block will receive the relation and its value as parameters. 
+.TP
+.B
+: map-items ( block[item -- ] -- )
+Used in the following form:
+.br
+.B block[
+.B ( item -- )
+.B ...
+.B ];
+.B map-items
+.br
+to apply a block to each item in the relation set. The block will receive 
+the item as a parameter. May be used to iterate over the item set and 
+extract all items with a certain relation.
+.TP
+.B
+: map-relation ( relation block[value item -- ] -- )
+Used in the following form:
+.br
+.I <relation>
+.B block[
+.B ( value item -- )
+.B ...
+.B ];
+.B map-relation
+.br
+to apply a block to each item with the given relation. The block
+will receive the item and the relation value as parameters. The
+relation may be an item or a number, pointer etc. The typing of the
+value is up to the application but may also be stored as a relation.
+.TP
+.B
+: new-item ( entry -- item)
+Returns a new item with the entry binding. The new item will become
+nameless if the entry is "nil". 
+.TP
+.B
+: put-relation ( value relation item -- )
+Adds the relation and value to the items associations. If the relation
+is available defined the new value is assigned. If the relation is
+not available a new relation-value pair is created and appended to the
+associations.
+.TP
+.B
+vocabulary relations ( -- )
+The relations library vocabulary. Include into the vocabulary search
+set, "context", to allow access to these extensions.
+.TP
+.B
+: remove-relation ( relation item -- )
+Removes the relation from the items associations. If the relation is not
+available no operation is performed.
+.SH INTERNALS
+Private definitions in the 
+.I relations
+vocabulary;
+.TP
+.B 
+ptr +associations ( item -- addr) private
+Structure access field of "ITEM" to the list of associations. The value
+is a pointer to an "ASSOCIATION" structure.
+.TP
+.B 
+ptr +entry ( item -- addr) private
+Structure access field of "ITEM" to the entry. Used to access the name
+field of the item.
+.TP
+.B 
+ptr +next-association ( association -- addr) private
+Structure access field of "ASSOCIATION" to the next association in the
+list of associations. The value is a pointer to an "ASSOCIATION" structure.
+.TP
+.B 
+ptr +next-item ( item -- addr) private
+Structure access field of "ITEM" to the list of item entries. The value is
+a pointer to the next "ITEM" structure in the list of items.
+.TP
+.B 
+ptr +relation ( association -- addr) private
+Structure access field of "ASSOCIATION" to relation of the association. 
+The value should be a "ITEM" pointer.
+.TP
+.B 
+ptr +value ( association -- addr) private
+Structure access field of "ASSOCIATION" to value of a relation. The
+value is store in a "cell".
+.TP
+.B 
+struct.type ASSOCIATION ( -- ) private
+Structure type for an association. The association is a triple list 
+element with three private fields; "+next-association", "+relation", and
+"+value". 
+.TP
+.B 
+: associate ( relation association -- addr) private
+Primitive lookup function used by "get-relation", "?get-relation" and
+"put-relation" to locate an "ASSOCIATION" in the association list. 
+Returns the address of the value if the relation is found. If the 
+relation is not found "nil" is returned.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR structures(3X),
+.IR blocks(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the
+entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

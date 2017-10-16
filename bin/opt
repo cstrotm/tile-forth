@@ -1,0 +1,34 @@
+#! /bin/sh
+#
+# NAME
+#	opt - stack operations
+# SYNOPSIS
+#	opt <files>
+# DESCRIPTION
+#	Find possible stack optimizations.
+# SEE ALSO
+#	grep(1)
+# AUTHOR
+#	Mikael R.K. Patel
+#	Computer Aided Design Laboratory (CADLAB)
+#	Department of Computer and Information Science
+#	Linkoping University
+#	S-581 83 LINKOPING
+#	SWEDEN
+#	Email: mip@ida.liu.se
+# HISTORY
+# 	Created on: 	01 March 1990
+#	Lasted updated:	13 August 1990
+
+if [ "$1" = "" ]
+then
+	echo "Usage:  opt file ..."
+else
+	for file in $*
+	do	
+		echo "Stack optimizations in: $file"
+		egrep -n "swap drop | drop drop | rot rot | swap over | over over" $file
+		echo
+	done
+
+fi

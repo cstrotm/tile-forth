@@ -1,0 +1,108 @@
+\
+\  BIT FIELD DEFINITIONS
+\
+\  Copyright (C) 1988-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 30 June 1988
+\
+\  Last updated on: 25 July 1990
+\
+\  Dependencies:
+\       (forth) forth
+\
+\  Description:
+\       Forth level definitions for bit field manipulation. Bit fields are
+\       extracted and altered on the top of stack element. Additional
+\       functions for bit and field access are also provided.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Bitfields definitions...) cr
+
+#ifundef b@  ( Check if bit and field access are not supported by the kernel)
+
+: b@ ( x pos -- bool)
+  1 swap << and boolean
+;
+
+: b! ( x y pos -- z)
+  >r 1 tuck
+  r@ << not and
+  swap rot and
+  r> << or
+;  
+
+: f@ ( x pos width -- y)
+  >r >> -1 r> << not and
+;
+
+: <f@ ( x pos width -- y)
+  >r >> -1 r@ << not and
+  dup 1 r@ 1- << and
+  if -1 r> << or
+  else r> drop then
+;
+
+: f! ( x y pos width -- z)
+  swap >r -1 swap << not tuck
+  r@ << not and
+  swap rot and
+  r> << or
+;
+
+#then
+
+vocabulary bitfields ( -- )
+
+bitfields definitions
+
+: bitfield.type ( -- bitfield.type pos0)
+  create here 0 , 0 
+does> ( bitfield.type -- )
+  drop variable
+;
+
+: bits ( pos1 width -- pos2)
+  create dup , over , +
+does> ( bits -- pos width)
+  2@
+;
+
+: bitfield.field ( width -- )
+  create ,
+does> ( bitfield.field -- )
+  @ bits
+; private
+    
+( Initial set of bit field names)
+1  bitfield.field bit ( -- )
+4  bitfield.field nibble ( -- )
+8  bitfield.field byte ( -- )
+16 bitfield.field word ( -- )
+
+: bitfield.end ( bitfield.type pos3 -- )
+  last rot ! 32 > abort" bitfield.end: warning too many fields"
+;
+
+forth only

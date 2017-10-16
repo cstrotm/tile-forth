@@ -1,0 +1,843 @@
+$assign ( str1 str2 -- ) lib/index.f83:25
+$more ( str -- bool) lib/index.f83:29
+* ( x y -- z) tst/channels.tst:32
+* ( x y -- z) tst/minimal.f83:289
+*abort* ( -- ) lib/debugger.f83:77
+*call* ( -- ) lib/debugger.f83:93
+*execute* ( -- ) lib/debugger.f83:100
+*profile* ( -- ) lib/debugger.f83:109
+*return* ( -- ) lib/debugger.f83:88
++ ( x y -- z) tst/minimal.f83:259
++advice ( advice -- addr) lib/debugger.f83:57
++arg ( rendezvous -- addr) lib/multi-tasking.f83:235
++associations ( item -- addr) lib/relations.f83:60
++balance ( self -- addr) tst/objects.tst:137
++block ( addr -- block) lib/blocks.f83:51
++block ( advice -- addr) lib/debugger.f83:55
++body ( macro -- addr) lib/macros.f83:50
++body ( task.type -- addr) lib/multi-tasking.f83:270
++bottom ( stack --- addr) lib/stacks.f83:51
++bytes ( stack -- addr) lib/stacks.f83:50
++code ( entry -- addr) lib/internals.f83:67
++count ( semaphore -- addr) lib/multi-tasking.f83:153
++data ( chan -- addr) lib/multi-tasking.f83:192
++denom ( rational -- addr) lib/rationals.f83:51
++domain ( mapping -- addr) lib/mappings.f83:51
++entry ( advice -- addr) lib/debugger.f83:56
++entry ( item -- addr) lib/relations.f83:59
++entry ( symbol -- addr) lib/parser.f83:52
++ep ( task -- addr) lib/multi-tasking.f83:61
++fp ( task -- addr) lib/multi-tasking.f83:60
++from ( range -- addr) lib/ranges.f83:50
++high ( double -- addr) lib/double.f83:47
++ip ( task -- addr) lib/multi-tasking.f83:57
++link ( entry -- addr) lib/internals.f83:64
++low ( double -- addr) lib/double.f83:48
++mode ( chan -- addr) lib/multi-tasking.f83:193
++mode ( entry -- addr) lib/internals.f83:66
++name ( entry -- addr) lib/internals.f83:65
++next ( list -- addr) tst/structures.tst:24
++next ( rule -- addr) lib/parser.f83:64
++next-association ( association -- addr) lib/relations.f83:91
++next-item ( item -- addr) lib/relations.f83:58
++not.zero ( semaphore -- addr) lib/multi-tasking.f83:152
++num ( rational -- addr) lib/rationals.f83:52
++owner ( self -- addr) tst/objects.tst:136
++pair ( mapping -- addr) lib/mappings.f83:53
++parameter ( entry -- addr) lib/internals.f83:68
++parameters ( task.type -- addr) lib/multi-tasking.f83:268
++pred ( queue -- addr) lib/queues.f83:48
++pred ( queue -- addr) tst/structures.tst:36
++primary ( symbol -- addr) lib/parser.f83:54
++profile ( advice -- addr) lib/debugger.f83:58
++queue ( block -- addr) tst/structures.tst:55
++queue ( task -- addr) lib/multi-tasking.f83:53
++r0 ( task -- addr) lib/multi-tasking.f83:59
++range ( mapping -- addr) lib/mappings.f83:52
++real-object ( self -- addr) tst/objects.tst:177
++received ( chan -- addr) lib/multi-tasking.f83:195
++relation ( association -- addr) lib/relations.f83:92
++res ( rendezvous -- addr) lib/multi-tasking.f83:236
++returns ( task.type -- addr) lib/multi-tasking.f83:269
++rp ( task -- addr) lib/multi-tasking.f83:58
++rule ( rule -- addr) lib/parser.f83:65
++s0 ( task -- addr) lib/multi-tasking.f83:56
++sent ( chan -- addr) lib/multi-tasking.f83:194
++size ( block -- addr) tst/structures.tst:56
++size ( macro -- addr) lib/macros.f83:51
++size ( struct.type -- addr) lib/structures.f83:49
++sp ( task -- addr) lib/multi-tasking.f83:55
++status ( task -- addr) lib/multi-tasking.f83:54
++succ ( queue -- addr) lib/queues.f83:47
++succ ( queue -- addr) tst/structures.tst:35
++syntax ( symbol -- addr) lib/parser.f83:53
++to ( range -- addr) lib/ranges.f83:49
++top ( stack -- addr) lib/stacks.f83:49
++traced ( self -- addr) tst/objects.tst:178
++users ( task.type -- addr) lib/multi-tasking.f83:267
++value ( association -- addr) lib/relations.f83:93
++waiting ( condition -- addr) lib/multi-tasking.f83:132
++x ( self -- addr) tst/objects.tst:112
++y ( self -- addr) tst/objects.tst:113
+- ( x y -- z) tst/minimal.f83:266
+-1 ( -- int) tst/minimal.f83:198
+-2 ( -- int) tst/minimal.f83:197
+-> ( value prototype -- ) lib/prototypes.f83:147
+-> ( x -- ) tst/minimal.f83:54
+-match ( addr1 addr2 n -- bool) lib/parser.f83:127
+.bitset ( bitset -- ) lib/bitsets.f83:176
+.class ( object -- ) lib/objects.f83:122
+.context ( -- ) lib/internals.f83:102
+.current ( -- ) lib/internals.f83:110
+.double ( addr -- ) lib/double.f83:67
+.entries ( code -- ) lib/internals.f83:114
+.entry ( entry -- ) lib/internals.f83:93
+.item ( item -- ) lib/relations.f83:84
+.items ( -- ) lib/relations.f83:193
+.macro ( -- ) lib/macros.f83:69
+.mapping ( mapping -- ) lib/mappings.f83:134
+.message ( message -- ) lib/objects.f83:161
+.message ( message -- ) lib/prototypes.f83:112
+.number ( x -- ) tst/calc.bnf:58
+.profile ( -- ) lib/debugger.f83:159
+.prototype ( prototype -- ) lib/prototypes.f83:89
+.question ( question -- ) tst/discrimination-net.tst:16
+.question ( question -- ) tst/discrimination-net.tst~:16
+.queue ( queue -- ) lib/queues.f83:129
+.range ( from to -- ) lib/ranges.f83:94
+.registers ( -- ) tst/minimal.f83:73
+.relations ( item -- ) lib/relations.f83:197
+.relations ( node -- ) tst/discrimination-net.tst:20
+.relations ( node -- ) tst/discrimination-net.tst~:20
+.relations ( prototype -- ) lib/prototypes.f83:93
+.s ( -- ) lib/debugger.f83:65
+.set ( set -- ) lib/sets.f83:177
+.sets ( -- ) tst/sets.tst:47
+.slot ( slot -- ) lib/prototypes.f83:151
+.stack ( s -- ) tst/minimal.f83:60
+.stack ( stack -- ) lib/stacks.f83:101
+.sub.range ( upper from to -- ) tst/ranges.tst:51
+.task ( task -- ) lib/multi-tasking.f83:79
+.values ( item -- ) lib/relations.f83:201
+/ ( x y -- q) tst/minimal.f83:302
+/MOD ( x y -- q r) tst/minimal.f83:295
+0 ( -- int) tst/minimal.f83:199
+0< ( x -- bool) tst/minimal.f83:211
+0> ( x -- bool) tst/minimal.f83:212
+1 ( -- int) tst/minimal.f83:200
+1- ( x -- y) tst/minimal.f83:204
+1/r ( num1 denom1 -- num2 denom2) lib/rationals.f83:110
+2 ( -- int) tst/minimal.f83:201
+2! ( a b addr -- ) lib/double.f83:82
+2+ ( x -- y) tst/minimal.f83:205
+2- ( x -- y) tst/minimal.f83:206
+2>r ( a b -- ) lib/double.f83:74
+2@f ( addr -- a b) lib/double.f83:81
+2DROP ( x y -- ) tst/minimal.f83:250
+2DUP ( x y -- x y x y) tst/minimal.f83:249
+2dup ( a b -- a b a b) lib/double.f83:79
+2over ( a b c d -- a b c d a b) lib/double.f83:80
+2r> ( -- a b) lib/double.f83:75
+2rot ( a b c d e f -- c d e f a b) lib/double.f83:78
+2swap ( a b c d -- c d a b) lib/double.f83:77
+3dup ( x y z -- x y z x y z) tst/ranges.tst:47
+: ( -- ) lib/debugger.f83:174
+< ( x y -- bool) tst/minimal.f83:306
+<MARK ( -- addr) tst/minimal.f83:231
+<RESOLVE ( -- addr) tst/minimal.f83:232
+<f@ ( x pos width -- y) lib/bitfields.f83:60
+= ( x y -- bool) tst/minimal.f83:305
+> ( x y -- bool) tst/minimal.f83:307
+>MARK ( -- addr) tst/minimal.f83:229
+>RESOLVE ( addr -- ) tst/minimal.f83:230
+>break ( -- addr) lib/parser.f83:72
+>buffer ( -- addr) lib/parser.f83:71
+>enum ( enum -- entry) lib/enumerates.f83:71
+>item ( item -- entry) lib/bitsets.f83:81
+>semantics ( -- addr) lib/parser.f83:153
+>skip ( -- addr) lib/parser.f83:73
+?DUP ( n -- [n n] or [0]) tst/minimal.f83:246
+?advice ( entry -- bool) lib/debugger.f83:137
+?avail ( chan -- bool) lib/multi-tasking.f83:202
+?avail-relation ( relation item -- bool) lib/relations.f83:126
+?awaiting ( -- bool) lib/multi-tasking.f83:257
+?empty ( s -- bool) tst/minimal.f83:59
+?empty-bitset ( bitset -- bool) lib/bitsets.f83:116
+?empty-list ( list -- bool) lib/lists.f83:123
+?empty-mapping ( mapping -- bool) lib/mappings.f83:63
+?empty-queue ( queue -- bool) lib/queues.f83:63
+?empty-set ( set -- bool) lib/sets.f83:173
+?empty-stack ( stack -- bool) lib/stacks.f83:70
+?full-stack ( stack -- bool) lib/stacks.f83:74
+?get-relation ( relation item -- [relation item false] or [value true]) lib/relations.f83:122
+?includes ( element set -- flag) tst/relations.tst:105
+?intersection-range ( from1 to1 from2 to2 -- bool) lib/ranges.f83:63
+?is-relation ( value relation item -- bool) lib/relations.f83:130
+?magic-number ( x -- int) tst/macros.tst:29
+?map-bitset ( bitset block[ item -- bool] -- ) lib/bitsets.f83:154
+?map-list ( list block[element -- bool] -- ) lib/lists.f83:95
+?map-mapping ( mapping block[range domain -- bool] -- ) lib/mappings.f83:124
+?map-queue ( queue block[item -- bool] -- ) lib/queues.f83:104
+?map-range ( from to block[index -- bool] -- ) lib/ranges.f83:86
+?map-set ( set block[element -- bool] -- ) lib/sets.f83:118
+?map-stack ( stack block[element -- bool] -- ) lib/stacks.f83:93
+?member-bitset ( item bitset -- bool) lib/bitsets.f83:120
+?member-list ( element list -- bool) lib/lists.f83:119
+?member-queue ( element queue -- bool) lib/queues.f83:119
+?member-range ( x from to -- bool) lib/ranges.f83:59
+?member-set ( element set -- bool) lib/sets.f83:169
+?question ( node -- node addr) tst/discrimination-net.tst:12
+?question ( node -- node addr) tst/discrimination-net.tst~:12
+?r< ( num1 denom1 num2 denom2 -- bool) lib/rationals.f83:144
+?r= ( num1 denom1 num2 denom2 -- bool) lib/rationals.f83:136
+?r> ( num1 denom1 num2 denom2 -- bool) lib/rationals.f83:140
+?range ( str -- [from to true] or [str false]) lib/ranges.f83:98
+?range-mapping ( domain mapping -- bool) lib/mappings.f83:106
+?rational ( str -- [num denom true] or [str false]) lib/rationals.f83:156
+?scan-relation ( node1 -- [node2 true] or [node1 false]) tst/discrimination-net.tst:27
+?scan-relation ( node1 -- [node2 true] or [node1 false]) tst/discrimination-net.tst~:27
+?wait ( semaphore -- bool) lib/multi-tasking.f83:171
+ABS ( x -- y) tst/minimal.f83:257
+ADD ( -- enum) tst/enumerates.tst:28
+ADVICE ( -- ) lib/debugger.f83:54
+AGAIN ( -- ) tst/minimal.f83:241
+AND ( x y -- z) tst/minimal.f83:189
+ARITHMETIC-TEST ( -- ) tst/minimal.f83:342
+ASSOCIATION ( value relatin next -- ) lib/relations.f83:90
+Account ( x -- ) tst/objects.tst:134
+BEGIN ( -- ) tst/minimal.f83:237
+BITS/BYTE ( -- int) lib/internals.f83:54
+BITS/WORD ( -- int) lib/internals.f83:56
+BLOCK ( n -- ) tst/minimal.f83:154
+BLOCK ( size -- ) tst/structures.tst:54
+BOOLEAN ( x -- bool) tst/minimal.f83:187
+BYTES/WORD ( -- int) lib/internals.f83:55
+CALL ( -- ) tst/minimal.f83:97
+CELL ( -- num) tst/minimal.f83:217
+CELL+ ( x -- y) tst/minimal.f83:218
+CHAN ( mode -- ) lib/multi-tasking.f83:191
+CODE ( -- enum) lib/internals.f83:80
+COLOR-VALUE ( -- mapping) tst/mappings.tst:31
+COLORS ( -- ) tst/bitsets.tst:8
+COMMUNICATION-MODES ( -- ) lib/multi-tasking.f83:185
+COMPILATION ( -- pos width) lib/internals.f83:74
+COMPILE ( -- ) tst/minimal.f83:150
+CONDITION ( -- ) lib/multi-tasking.f83:131
+CONSTANT ( -- enum) lib/internals.f83:83
+CONSTANT ( n -- ) tst/minimal.f83:167
+CREATE ( -- ) tst/minimal.f83:149
+CREATE ( -- enum) lib/internals.f83:85
+DATA ( -- ) tst/minimal.f83:155
+DAY_NUMBER ( -- from to) tst/ranges.tst:13
+DEFINE ( -- ) tst/minimal.f83:152
+DELAYED ( -- enum) lib/multi-tasking.f83:72
+DOUBLE ( low high -- ) lib/double.f83:46
+DROP ( x -- ) tst/minimal.f83:174
+DUP ( x -- x x) tst/minimal.f83:175
+ELSE ( -- ) tst/minimal.f83:235
+END ( -- ) tst/minimal.f83:153
+ENTRY ( -- ) lib/internals.f83:63
+ENTRY-CODES ( -- ) lib/internals.f83:79
+ENTRY-MODES ( -- ) lib/internals.f83:71
+ERROR ( -- pos width) tst/bitfields.tst:10
+ERROR.CODE ( -- pos width) tst/bitfields.tst:11
+EXCEPTION ( -- enum) lib/internals.f83:90
+EXECUTION ( -- pos width) lib/internals.f83:73
+FAC ( n -- n!) tst/minimal.f83:378
+FAC-TEST ( -- ) tst/minimal.f83:382
+FACTORIAL ( -- ) tst/channels.tst:39
+FALSE ( -- false) tst/minimal.f83:185
+FIB ( n -- m) tst/minimal.f83:367
+FIB-TEST ( -- ) tst/minimal.f83:372
+FIELD ( -- enum) lib/internals.f83:89
+FILTER ( -- ) tst/task-sieve.tst:14
+FIVE ( -- enum) tst/enumerates.tst:15
+FORWARD ( -- enum) lib/internals.f83:88
+FOUR ( -- enum) tst/enumerates.tst:14
+HOUR_NUMBER ( -- from to) tst/ranges.tst:14
+IF ( bool -- ) tst/minimal.f83:234
+IMMEDIATE ( -- pos width) lib/internals.f83:72
+INDEX ( -- pos width) tst/bitfields.tst:12
+INDIRECT ( -- pos width) tst/bitfields.tst:13
+IOWAITING ( -- enum) lib/multi-tasking.f83:70
+ITEM ( entry -- ) lib/relations.f83:57
+LIST ( -- ) tst/structures.tst:23
+LITERAL ( x -- ) tst/minimal.f83:316
+LOAD ( -- enum) tst/enumerates.tst:26
+LOCAL ( -- enum) lib/internals.f83:87
+LOGIC-TEST ( -- ) tst/minimal.f83:321
+MACRO ( -- ) lib/macros.f83:49
+MANY-TO-ONE ( -- enum) lib/multi-tasking.f83:188
+MAX ( x y -- z) tst/minimal.f83:310
+MAX-INT ( -- int) tst/minimal.f83:202
+MAX_INT ( -- int) lib/internals.f83:59
+MIN ( x y -- z) tst/minimal.f83:309
+MIN-INT ( -- int) tst/minimal.f83:196
+MINUTE_NUMBER ( -- from to) tst/ranges.tst:15
+MIN_INT ( -- int) lib/internals.f83:58
+MOD ( x y -- r) tst/minimal.f83:303
+MONTH_NUMBER ( -- from to) tst/ranges.tst:12
+MUL ( -- enum) tst/enumerates.tst:30
+MULTIPLY ( -- ) tst/channels.tst:19
+NEGATE ( x -- y) tst/minimal.f83:256
+NIP ( x y -- y) tst/minimal.f83:248
+NOT ( x y -- z) tst/minimal.f83:188
+ONE ( -- enum) tst/enumerates.tst:11
+ONE-TO-MANY ( -- enum) lib/multi-tasking.f83:187
+ONE-TO-ONE ( -- enum) lib/multi-tasking.f83:186
+OP-CODES ( -- ) tst/enumerates.tst:25
+OP.CODE ( -- pos width) tst/bitfields.tst:14
+OR ( x y -- z) tst/minimal.f83:190
+OVER ( x y -- x y x) tst/minimal.f83:178
+Object ( -- ) tst/objects.tst:43
+Object ( -- prototype) tst/prototypes.tst:15
+PRIVATE ( -- pos width) lib/internals.f83:75
+Point ( x y -- ) tst/objects.tst:110
+QUEUE ( -- ) lib/queues.f83:46
+QUEUE ( flag -- ) tst/structures.tst:34
+R@ ( -- x) tst/minimal.f83:179
+RANGE ( -- range) lib/ranges.f83:48
+RATIONAL ( -- ) lib/rationals.f83:50
+READY ( -- enum) lib/multi-tasking.f83:68
+RENDEZVOUS ( -- ) lib/multi-tasking.f83:234
+REPEAT ( -- ) tst/minimal.f83:239
+RESERVED ( -- pos width) lib/internals.f83:76
+ROT ( x y z -- y z x) tst/minimal.f83:177
+RUNNING ( -- enum) lib/multi-tasking.f83:69
+SECOND_NUMBER ( -- from to) tst/ranges.tst:16
+SEMAPHORE ( n -- ) lib/multi-tasking.f83:151
+SMALL-NUMBERS ( -- ) tst/enumerates.tst:9
+STACK ( size -- ) lib/stacks.f83:48
+STATUS-REG ( -- ) tst/bitfields.tst:9
+STORE ( -- enum) tst/enumerates.tst:27
+SUB ( -- enum) tst/enumerates.tst:29
+SWAP ( x y -- y x) tst/minimal.f83:176
+TASK-HEADER ( -- ) lib/multi-tasking.f83:52
+TASK-STATUS-CODES ( -- ) lib/multi-tasking.f83:66
+TEMP ( -- addr) tst/minimal.f83:172
+TERMINATED ( -- enum) lib/multi-tasking.f83:67
+THEN ( -- ) tst/minimal.f83:236
+THREE ( -- enum) tst/enumerates.tst:13
+TRUE ( -- true) tst/minimal.f83:184
+TUCK ( x y -- y x y) tst/minimal.f83:247
+TWO ( -- enum) tst/enumerates.tst:12
+TraceableObject ( -- ) tst/objects.tst:204
+TraceableObject ( class -- ) tst/objects.tst:175
+U* ( x y -- z) tst/minimal.f83:277
+U/MOD ( x y -- q r) tst/minimal.f83:283
+U< ( x y -- bool) tst/minimal.f83:268
+UNTIL ( bool -- ) tst/minimal.f83:240
+USER ( -- enum) lib/internals.f83:86
+VARIABLE ( -- addr) tst/minimal.f83:161
+VARIABLE ( -- enum) lib/internals.f83:82
+VOCABULARY ( -- enum) lib/internals.f83:84
+WAITING ( -- enum) lib/multi-tasking.f83:71
+WHILE ( bool -- ) tst/minimal.f83:238
+WIRE ( -- ) tst/channels.tst:14
+XOR ( x y -- y) tst/minimal.f83:191
+YEAR_NUMBER ( -- from to) tst/ranges.tst:11
+ZERO ( -- enum) tst/enumerates.tst:10
+[CONSTANT] ( -- n) tst/minimal.f83:166
+[VARIABLE] ( -- addr) tst/minimal.f83:160
+[advice] ( advice -- ) lib/debugger.f83:61
+[break] ( advice -- ) lib/debugger.f83:115
+[colon] ( advice -- ) lib/debugger.f83:71
+[trace] ( advice -- ) lib/debugger.f83:76
+]; ( -- block) lib/blocks.f83:65
+a ( -- addr) tst/channels.tst:20
+a ( -- addr) tst/channels.tst:40
+accept ( -- rendezvous arg) lib/multi-tasking.f83:245
+accept.end ( rendezvous res -- ) lib/multi-tasking.f83:251
+activate ( task -- ) lib/multi-tasking.f83:102
+add ( element set -- ) tst/relations.tst:109
+add-bitset ( item bitset1 -- bitset2) lib/bitsets.f83:85
+add-magic-number ( x -- int) tst/macros.tst:38
+add-mapping ( range domain mapping -- ) lib/mappings.f83:89
+add-set ( element set -- ) lib/sets.f83:79
+addWithOccurrences ( value element bag -- ) tst/relations.tst:117
+advice ( action -- ) lib/debugger.f83:141
+align ( offset1 -- offset2) lib/objects.f83:91
+align ( offset1 -- offset2) lib/structures.f83:106
+allot-instance ( class -- object) lib/objects.f83:130
+append-list ( element list -- ) lib/lists.f83:66
+apply-list ( offset list -- ) lib/lists.f83:108
+apply-set ( set -- ) lib/sets.f83:160
+array ( size -- ) tst/permutations.tst:11
+as ( -- struct.type) lib/structures.f83:52
+assign ( a b -- ) lib/structures.f83:82
+associate ( relation association -- addr) lib/relations.f83:98
+await ( condition -- ) lib/multi-tasking.f83:137
+b ( -- addr) tst/channels.tst:21
+b ( -- addr) tst/channels.tst:41
+b! ( x y pos -- z) lib/bitfields.f83:49
+b@ ( x pos -- bool) lib/bitfields.f83:45
+babel ( -- ) tst/discrimination-net.tst:157
+babel ( -- ) tst/discrimination-net.tst~:157
+backtrack ( x y  -- ) lib/parser.f83:177
+backus-naur-form ( -- ) lib/bnf.f83:46
+balance ( self -- x) tst/objects.tst:144
+balance ( self -- x) tst/objects.tst:34
+balance ( self -- x) tst/objects.tst:38
+balance: ( self -- value) tst/prototypes.tst:92
+basicInstanceSize ( class -- num) lib/objects.f83:111
+basicWrite ( self -- ) tst/objects.tst:103
+basicWrite ( self -- ) tst/objects.tst:27
+bind ( addr -- ) lib/parser.f83:160
+bind ( x -- ) tst/channels.tst:12
+binding ( -- chan) tst/channels.tst:10
+bit ( -- ) lib/bitfields.f83:99
+bitfield.end ( bitfield.type pos3 -- ) lib/bitfields.f83:104
+bitfield.field ( width -- ) lib/bitfields.f83:92
+bitfield.type ( -- bitfield.type pos0) lib/bitfields.f83:80
+bitfields ( -- ) lib/bitfields.f83:76
+bits ( pos1 width -- pos2) lib/bitfields.f83:86
+bitset.end ( bitset.type item3 -- ) lib/bitsets.f83:65
+bitset.type ( -- bitset.type item0) lib/bitsets.f83:53
+bitsets ( -- ) lib/bitsets.f83:49
+black ( -- ite) tst/mappings.tst:26
+black ( -- item) tst/bitsets.tst:10
+black ( -- item) tst/mappings.tst:20
+block ( addr -- block) tst/structures.tst:64
+blocks ( -- ) lib/blocks.f83:47
+blue ( -- item) tst/bitsets.tst:11
+blue ( -- item) tst/mappings.tst:24
+break ( -- ) lib/debugger.f83:155
+break-on-special ( addr1 -- bool) lib/parser.f83:87
+break-on-white-space ( addr -- bool) lib/parser.f83:100
+brown ( -- item) tst/bitsets.tst:15
+brown ( -- item) tst/mappings.tst:25
+bubble ( -- ) tst/bubble-sort.tst:32
+bubble-sort ( -- ) tst/bubble-sort.tst:40
+bubble-sort-with-flag ( -- ) tst/bubble-sort.tst:56
+bubble-with-flag ( -- ) tst/bubble-sort.tst:47
+buffer ( -- addr) lib/parser.f83:70
+byte ( -- ) lib/bitfields.f83:101
+byte ( -- ) lib/multi-tasking.f83:306
+byte ( -- ) lib/objects.f83:85
+byte ( -- ) lib/structures.f83:121
+byte-sieve ( -- ) tst/byte-sieve.tst:38
+bytes ( offset1 n -- offset2) lib/structures.f83:96
+bytes ( offset1 size -- offset2) lib/objects.f83:75
+bytes ( users1 size -- users2) lib/multi-tasking.f83:293
+c ( -- addr) tst/channels.tst:22
+calculator ( -- ) tst/calc.f83:46
+call ( block -- ) lib/blocks.f83:72
+canUnderstand ( message class -- bool) lib/objects.f83:107
+cause ( condition -- ) lib/multi-tasking.f83:141
+class ( object -- addr) lib/objects.f83:118
+colburn-sieve ( -- ) tst/colburn-sieve.tst:36
+colon ( -- ) lib/debugger.f83:147
+colors ( -- addr) tst/bitsets.tst:19
+copy ( self -- object) tst/objects.tst:17
+copy ( self -- object) tst/objects.tst:71
+copy ( x y z -- x y z x y z) tst/towers-of-hanoi.tst:10
+copy-set ( set1 set2 -- ) tst/sets.tst:19
+count-odd-numbers ( from to -- n) tst/ranges.tst:25
+create-node ( n t -- ) tst/tree-sort.tst:62
+current-syntax-symbol ( -- addr) lib/bnf.f83:54
+cycles ( -- addr | Instruction cycle counter) tst/minimal.f83:103
+deactivate ( queue task -- ) lib/multi-tasking.f83:94
+debugger ( -- ) lib/debugger.f83:50
+decode ( -- ) tst/minimal.f83:85
+deepCopy ( self -- object) tst/objects.tst:19
+deepCopy ( self -- object) tst/objects.tst:79
+delay ( n -- ) lib/multi-tasking.f83:108
+delegate ( relation prototype -- [relation prototype false] or [value true]) lib/prototypes.f83:60
+deposit ( money self -- ) tst/prototypes.tst:100
+deposit ( money self -- ) tst/prototypes.tst:88
+deposit ( x self -- ) tst/objects.tst:152
+deposit ( x self -- ) tst/objects.tst:36
+depth-stack ( stack -- num) lib/stacks.f83:66
+dequeue ( item -- ) lib/queues.f83:74
+difference-bitset ( bitset1 bitset2 -- bitset3) lib/bitsets.f83:101
+discriminate ( node -- item) tst/discrimination-net.tst:36
+discriminate ( node -- item) tst/discrimination-net.tst~:36
+dispose ( x y z -- ) tst/towers-of-hanoi.tst:14
+dispose-instance ( object -- ) lib/objects.f83:139
+do-prime ( -- ) tst/byte-sieve.tst:21
+do-prime ( -- ) tst/colburn-sieve.tst:20
+double ( low high -- ) lib/double.f83:57
+dump-item-values ( -- ) tst/relations.tst:170
+dump-items ( -- ) tst/relations.tst:163
+dump-list ( -- ) tst/bubble-sort.tst:22
+dump-tree ( t -- ) tst/tree-sort.tst:101
+edit ( d a n -- d a n) tst/towers-of-hanoi.tst:18
+element ( -- ) tst/sets.tst:10
+elements ( -- int) tst/bubble-sort.tst:14
+empty ( -- symbol) lib/parser.f83:341
+empty ( s -- ) tst/minimal.f83:58
+empty-bitset ( -- bitset0) lib/bitsets.f83:69
+empty-list ( list -- ) lib/lists.f83:52
+empty-mapping ( mapping -- ) lib/mappings.f83:59
+empty-set ( set -- ) lib/sets.f83:63
+empty-stack ( stack -- ) lib/stacks.f83:58
+end.primary ( -- ) lib/parser.f83:314
+end.syntax ( -- ) lib/parser.f83:333
+endstructure ( structure size --- ) tst/tree-sort.tst:47
+enqueue ( item queue -- ) lib/queues.f83:67
+entry ( -- symbol) lib/parser.f83:345
+entry-name ( -- str) lib/index.f83:18
+entry-name-size ( -- num) lib/index.f83:17
+enum ( -- ) lib/multi-tasking.f83:310
+enum ( -- ) lib/objects.f83:89
+enum ( -- ) lib/structures.f83:125
+enum ( enum1 -- enum2) lib/enumerates.f83:51
+enum.end ( enum.type enum3 -- ) lib/enumerates.f83:57
+enum.type ( -- enum.type enum0) lib/enumerates.f83:45
+enumerates ( -- ) lib/enumerates.f83:41
+eoln ( -- symbol) lib/parser.f83:342
+exchange ( x y -- ) tst/permutations.tst:9
+exchange ( x y -- ) tst/tree-sort.tst:9
+f! ( x y pos width -- z) lib/bitfields.f83:67
+f@ ( x pos width -- y) lib/bitfields.f83:56
+fac ( n -- n!) tst/blocks.tst:52
+fac ( n -- n!) tst/channels.tst:54
+fetch-instruction ( -- instruction) tst/minimal.f83:114
+fib ( n -- m) tst/debugger.tst:48
+fib ( n -- m) tst/fibonacci.tst:12
+fib-iter ( n -- m) tst/debugger.tst:60
+fib-iter ( n -- m) tst/fibonacci.tst:29
+fib-tail ( a b c -- m) tst/debugger.tst:56
+fib-tail ( a b c -- m) tst/fibonacci.tst:23
+fie ( -- queue) tst/queues.tst:19
+fie ( flag -- block) tst/blocks.tst:27
+fie ( n -- ) tst/debugger.tst:22
+file-name ( -- str) lib/index.f83:15
+file-name-size ( -- num) lib/index.f83:14
+first-syntax ( symbol -- ) lib/bnf.f83:56
+flags ( -- addr) tst/byte-sieve.tst:19
+flags ( -- addr) tst/colburn-sieve.tst:18
+foo ( -- queue) tst/queues.tst:14
+foo ( -- stack) tst/stacks.tst:10
+foo ( n -- ) tst/debugger.tst:10
+foo ( x -- int) tst/blocks.tst:16
+fum ( -- queue) tst/queues.tst:25
+get ( nil -- item) tst/rendezvous.tst:41
+get ( nil -- n) tst/rendezvous.tst:26
+get-relation ( relation item -- value) lib/relations.f83:118
+green ( -- item) tst/bitsets.tst:14
+green ( -- item) tst/mappings.tst:23
+hanoi ( departure arrival number -- ) tst/towers-of-hanoi.tst:43
+i>r ( x -- num denom) lib/rationals.f83:148
+identifier ( -- symbol) lib/parser.f83:344
+index ( -- ) lib/index.f83:73
+inherited ( -- ) lib/prototypes.f83:133
+inherits ( -- relation) lib/prototypes.f83:58
+innerproduct ( a[row][*] b[*][column] -- int) tst/matrix-mult.tst:30
+insert-list ( element list -- ) lib/lists.f83:70
+insert-node ( n t -- ) tst/tree-sort.tst:69
+instance ( class -- ) lib/objects.f83:143
+instance-disposed: ( class -- object) lib/objects.f83:62
+instance-size: ( class -- num) lib/objects.f83:60
+instance-variables: ( class -- entry) lib/objects.f83:61
+instanceSize ( self -- num) tst/objects.tst:16
+instanceSize ( self -- num) tst/objects.tst:67
+instruction ( n -- ) tst/minimal.f83:84
+interact ( symbol -- ) lib/parser.f83:285
+interact-buffer ( -- addr) lib/parser.f83:283
+interact-buffer-size ( -- num) lib/parser.f83:282
+intersection-bitset ( bitset1 bitset2 -- bitset3) lib/bitsets.f83:93
+intersection-range ( from1 to1 from2 to2 -- from3 to3) lib/ranges.f83:75
+intersection-set ( set1 set2 -- ) lib/sets.f83:141
+ip ( -- x | Instruction pointer) tst/minimal.f83:67
+ir ( -- x | Instruction register) tst/minimal.f83:66
+isKindOf ( class self -- bool) tst/objects.tst:49
+isKindOf ( class self -- boolean) tst/objects.tst:12
+isMemberOf ( class self -- bool) tst/objects.tst:59
+isMemberOf ( class self -- boolean) tst/objects.tst:13
+item ( -- ) lib/relations.f83:72
+item ( -- ) tst/mappings.tst:10
+item ( item1 -- item2) lib/bitsets.f83:59
+item>entry ( item -- entry) lib/relations.f83:80
+items ( -- addr) lib/relations.f83:53
+join ( task -- ) lib/multi-tasking.f83:114
+list ( -- ) lib/lists.f83:48
+lists ( -- ) lib/lists.f83:44
+location ( -- ) tst/relations.tst:72
+long ( -- ) lib/multi-tasking.f83:308
+long ( -- ) lib/objects.f83:87
+long ( -- ) lib/structures.f83:123
+macro ( -- ) lib/macros.f83:63
+macros ( -- ) lib/macros.f83:45
+make-no-semantic ( -- ) lib/bnf.f83:84
+make-non-terminal ( symbol -- ) lib/bnf.f83:64
+make-semantic ( symbol -- ) lib/bnf.f83:80
+make-struct ( struct.type -- addr) lib/structures.f83:66
+make-task ( task.type -- task) lib/multi-tasking.f83:264
+make-task ( task.type -- task) lib/multi-tasking.f83:279
+make-terminal ( symbol -- ) lib/bnf.f83:68
+make-zero-or-more ( symbol -- ) lib/bnf.f83:76
+make-zero-or-one ( symbol -- ) lib/bnf.f83:72
+makestruct ( size --- ) tst/tree-sort.tst:48
+malloc ( structure -- instance) tst/tree-sort.tst:49
+map-bitset ( bitset block[ item -- ] -- ) lib/bitsets.f83:139
+map-item ( item block[value relation -- ] -- ) lib/relations.f83:179
+map-items ( block[item -- ] -- ) lib/relations.f83:150
+map-list ( list block[element -- ] -- ) lib/lists.f83:83
+map-mapping ( mapping block[range domain -- ] -- ) lib/mappings.f83:114
+map-queue ( queue block[item -- ] -- ) lib/queues.f83:92
+map-range ( from to block[index -- ] -- ) lib/ranges.f83:79
+map-relation ( relation block[value item -- ] -- ) lib/relations.f83:162
+map-set ( set block[element -- ] -- ) lib/sets.f83:106
+map-stack ( stack block[element -- ] -- ) lib/stacks.f83:86
+mapping ( size -- ) lib/mappings.f83:55
+mappings ( -- ) lib/mappings.f83:47
+matrix-mult ( -- ) tst/matrix-mult.tst:39
+message ( -- ) lib/objects.f83:155
+message ( -- ) lib/prototypes.f83:106
+method ( -- ) lib/objects.f83:165
+method ( prototype -- ) lib/prototypes.f83:118
+minimal ( -- ) tst/minimal.f83:45
+mip ( a b c -- c) tst/macros.tst:21
+mutex ( -- ) lib/multi-tasking.f83:159
+new-instance ( class -- object) lib/objects.f83:134
+new-item ( -- item) lib/relations.f83:68
+new-prototype ( parent -- prototype) lib/prototypes.f83:73
+new-struct ( -- addr) lib/structures.f83:72
+new-task ( -- task) lib/multi-tasking.f83:286
+next-syntax ( -- ) lib/bnf.f83:60
+nibble ( -- ) lib/bitfields.f83:100
+nip ( -- block) tst/blocks.tst:9
+nip ( a b -- b) tst/macros.tst:9
+no-semantic ( -- true) lib/parser.f83:252
+node ( -- ) tst/tree-sort.tst:53
+non-terminal ( symbol -- [] or [false]) lib/parser.f83:218
+not-equal ( a b -- bool) lib/structures.f83:86
+number ( -- symbol) lib/parser.f83:343
+objects ( -- ) lib/objects.f83:54
+occurencesOf ( element set -- value) tst/relations.tst:101
+open ( name self -- ) tst/prototypes.tst:87
+open ( owner self -- ) tst/prototypes.tst:96
+owner ( self -- x) tst/objects.tst:148
+owner ( self -- x) tst/objects.tst:35
+owner: ( self -- value) tst/prototypes.tst:91
+parent ( prototype -- addr) lib/prototypes.f83:81
+parse ( symbol -- [semantics] or [false]) lib/parser.f83:260
+parse" ( symbol -- ) lib/parser.f83:271
+parser ( -- ) lib/parser.f83:45
+path ( from direction to -- ) tst/relations.tst:76
+perform ( message self -- ) tst/objects.tst:25
+perform ( message self -- ) tst/objects.tst:95
+permutations ( -- ) tst/permutations.tst:45
+permute ( n -- ) tst/permutations.tst:28
+plant-help ( -- ) tst/discrimination-net.tst:103
+plant-help ( -- ) tst/discrimination-net.tst~:103
+pop ( s -- x) tst/minimal.f83:57
+pop ( stack -- element) lib/stacks.f83:82
+position ( x y self -- ) tst/objects.tst:119
+position ( x y self -- ) tst/objects.tst:32
+position ( x y self -- ) tst/prototypes.tst:42
+position ( x y self -- ) tst/prototypes.tst:49
+pred ( queue -- pred) lib/queues.f83:57
+prepare-call ( d a n -- d a n d i n-1) tst/towers-of-hanoi.tst:22
+prepare-return ( d a n -- d a n i a n-1) tst/towers-of-hanoi.tst:26
+primary ( -- bool) lib/parser.f83:351
+primary ( -- bool) lib/parser.f83:355
+primary ( -- bool) lib/parser.f83:368
+primary ( -- bool) lib/parser.f83:389
+primary ( -- set) tst/sets.tst:39
+primary ( -- true) lib/parser.f83:347
+primary ( symbol -- ) lib/parser.f83:309
+primary ( symbol -- bool) lib/parser.f83:202
+print-queue ( queue -- ) tst/queues.tst:8
+processor ( -- ) tst/minimal.f83:120
+prototype ( parent -- ) lib/prototypes.f83:77
+prototype>entry ( prototype -- entry) lib/prototypes.f83:85
+prototypes ( -- ) lib/prototypes.f83:52
+ptr ( -- ) lib/multi-tasking.f83:309
+ptr ( -- ) lib/objects.f83:88
+ptr ( -- ) lib/structures.f83:124
+push ( element stack -- ) lib/stacks.f83:78
+push ( x s -- ) tst/minimal.f83:56
+put ( item -- nil) tst/rendezvous.tst:31
+put ( item -- nil) tst/rendezvous.tst:36
+put ( n -- nil) tst/rendezvous.tst:25
+put-relation ( value relation item -- ) lib/relations.f83:110
+r* ( num1 denom1 num2 denom2 -- num3 denom3) lib/rationals.f83:106
+r+ ( num1 denom1 num2 denom2 -- num3 denom3) lib/rationals.f83:93
+r- ( num1 denom1 num2 denom2 -- num3 denom3) lib/rationals.f83:102
+r. ( num denom -- ) lib/rationals.f83:118
+r/ ( num1 denom1 num2 denom2 -- num3 denom3) lib/rationals.f83:114
+r>i ( num denom -- x) lib/rationals.f83:152
+random ( -- n ) tst/bubble-sort.tst:12
+random ( -- n ) tst/matrix-mult.tst:12
+random ( -- n ) tst/tree-sort.tst:14
+range ( from to -- ) lib/ranges.f83:53
+range-mapping ( domain mapping -- addr) lib/mappings.f83:110
+ranges ( -- ) lib/ranges.f83:44
+rational ( num denom -- ) lib/rationals.f83:55
+rationals ( -- ) lib/rationals.f83:46
+read ( self -- ) tst/objects.tst:29
+receive ( chan -- data) lib/multi-tasking.f83:220
+recursive-fib ( -- ) tst/fibonacci.tst:19
+red ( -- item) tst/bitsets.tst:12
+red ( -- item) tst/mappings.tst:22
+reflexive ( relation item -- ) tst/relations.tst:44
+relations ( -- ) lib/relations.f83:47
+release ( rule x y -- ) lib/parser.f83:173
+remove ( element set -- ) tst/relations.tst:113
+remove-bitset ( item bitset1 -- bitset2) lib/bitsets.f83:97
+remove-mapping ( domain mapping -- ) lib/mappings.f83:93
+remove-relation ( relation item -- ) lib/relations.f83:134
+remove-set ( element set -- ) lib/sets.f83:83
+reset-processor ( -- ) tst/minimal.f83:106
+respondsTo ( message self -- bool) tst/objects.tst:63
+respondsTo ( message self -- boolean) tst/objects.tst:14
+restart ( -- addr | Restart instruction pointer) tst/minimal.f83:104
+rnegate ( num1 denom1 -- num2 denom2) lib/rationals.f83:89
+rnormalize ( num1 denom1 -- num2 denom2) lib/rationals.f83:66
+rp ( -- s | Return address stack) tst/minimal.f83:68
+rule ( -- ) lib/parser.f83:63
+rule ( rule -- bool) lib/parser.f83:183
+run ( -- ) tst/minimal.f83:141
+scan ( -- addr n) lib/parser.f83:106
+scan-end-of-line ( -- ) lib/index.f83:67
+scan-entry-name ( -- ) lib/index.f83:47
+scan-file-name ( -- ) lib/index.f83:36
+scan-stack-comment ( -- ) lib/index.f83:61
+search-list ( element list -- [element last] or [false]) lib/lists.f83:56
+search-mapping ( domain mapping -- [addr1] or [domain addr2 false]) lib/mappings.f83:77
+search-set ( element set -- [addr1] or [element addr2 false]) lib/sets.f83:67
+secondary ( -- set) tst/sets.tst:40
+seed ( -- addr) tst/bubble-sort.tst:9
+seize ( rule -- rule x y rule) lib/parser.f83:167
+semantic ( -- true) lib/parser.f83:248
+semantic, ( addr -- ) lib/parser.f83:155
+semantics ( -- addr) lib/parser.f83:152
+semantics-size ( -- num) lib/parser.f83:151
+send ( data chan -- ) lib/multi-tasking.f83:208
+send ( object message class -- object) lib/objects.f83:151
+service ( arg -- res) tst/rendezvous.tst:14
+service ( n -- m) tst/rendezvous.tst:9
+set ( size -- ) lib/sets.f83:51
+sets ( -- ) lib/sets.f83:47
+shallowCopy ( self -- object) tst/objects.tst:18
+shallowCopy ( self -- object) tst/objects.tst:75
+shouldNotImplement ( message self -- ) tst/objects.tst:91
+shouldNotImplement ( self -- ) tst/objects.tst:23
+signal ( semaphore -- ) lib/multi-tasking.f83:163
+size ( -- int) tst/byte-sieve.tst:18
+size ( -- int) tst/colburn-sieve.tst:17
+size ( addr -- size) tst/structures.tst:65
+size-bitset ( bitset -- num) lib/bitsets.f83:105
+size-list ( list -- num) lib/lists.f83:74
+size-mapping ( mapping -- num) lib/mappings.f83:67
+size-queue ( queue -- num) lib/queues.f83:83
+size-range ( from to -- int) lib/ranges.f83:67
+size-set ( set -- num) lib/sets.f83:96
+size-stack ( stack -- num) lib/stacks.f83:62
+sizeof ( -- num) lib/structures.f83:77
+skip-white-space ( addr1 -- addr2) lib/parser.f83:75
+slot ( -- ) lib/prototypes.f83:141
+sp ( -- s | Parameter stack) tst/minimal.f83:69
+stack ( n -- ) tst/minimal.f83:55
+stack-comment ( -- str) lib/index.f83:21
+stack-comment-size ( -- num) lib/index.f83:20
+stacks ( -- ) lib/stacks.f83:44
+struct ( -- ) lib/multi-tasking.f83:302
+struct ( -- ) lib/structures.f83:116
+struct.end ( [] or [struct.type offset3] -- ) lib/structures.f83:136
+struct.field ( bytes -- ) lib/structures.f83:110
+struct.type ( -- struct.type offset0) lib/structures.f83:90
+struct: ( offset1 size --- offset2) tst/tree-sort.tst:39
+structure ( --- structure offset0) tst/tree-sort.tst:33
+structures ( -- ) lib/structures.f83:45
+subclass ( superclass -- offset0) lib/objects.f83:70
+subclass.end ( offset3 -- ) lib/objects.f83:95
+subclass.field ( size -- ) lib/objects.f83:79
+subclassResponsibility ( message self -- ) tst/objects.tst:87
+subclassResponsibility ( self -- ) tst/objects.tst:22
+succ ( queue -- succ) lib/queues.f83:53
+super ( -- ) lib/objects.f83:169
+superclass ( class1 -- class2) lib/objects.f83:103
+symbol ( -- ) lib/parser.f83:51
+symmetric ( item1 relation item2 -- ) tst/relations.tst:48
+syntax ( symbol -- ) lib/parser.f83:318
+syntax ( symbol -- bool) lib/parser.f83:187
+tail-recurse ( -- ) lib/debugger.f83:132
+tail-recursive-fib ( -- ) tst/fibonacci.tst:31
+task-sieve ( -- ) tst/task-sieve.tst:40
+task.body ( task.type users3 -- ) lib/multi-tasking.f83:312
+task.end ( entry -- ) lib/multi-tasking.f83:318
+task.field ( size -- ) lib/multi-tasking.f83:297
+task.type ( parameters returns -- ) lib/multi-tasking.f83:266
+terminal ( symbol -- [] or [false]) lib/parser.f83:212
+the-class ( -- addr) lib/objects.f83:64
+the-prototype ( -- addr) lib/prototypes.f83:116
+the-sets ( -- set) tst/sets.tst:45
+this ( -- addr) lib/structures.f83:57
+this-class ( -- class) lib/objects.f83:66
+this-item ( -- item) lib/relations.f83:76
+this-prototype ( -- prototype) lib/prototypes.f83:69
+token ( -- addr) lib/parser.f83:387
+token-size ( -- num) lib/parser.f83:386
+tos ( -- x | Top of stack register) tst/minimal.f83:65
+towers-of-hanoi ( -- ) tst/towers-of-hanoi.tst:52
+trace ( -- ) lib/debugger.f83:151
+trace ( -- addr | Trace function pointer) tst/minimal.f83:102
+trace-instructions ( -- ) tst/minimal.f83:142
+traceOff ( self -- ) tst/objects.tst:173
+traceOff ( self -- ) tst/objects.tst:192
+traceOff ( self -- ) tst/objects.tst:205
+traceOn ( self  -- ) tst/objects.tst:172
+traceOn ( self -- ) tst/objects.tst:196
+traceOn ( self -- ) tst/objects.tst:206
+tree-sort ( -- ) tst/tree-sort.tst:110
+undefined ( -- num denom) lib/rationals.f83:61
+union-bitset ( bitset1 bitset2 -- bitset3) lib/bitsets.f83:89
+union-range ( from1 to1 from2 to2 -- from3 to3) lib/ranges.f83:71
+union-set ( set1 set2 -- ) lib/sets.f83:131
+unknown-message ( message prototype -- ) lib/prototypes.f83:104
+unknown-message ( message self -- ) tst/prototypes.tst:19
+unknown-message ( message self -- ) tst/prototypes.tst:9
+unknown-slot ( slot prototype -- ) lib/prototypes.f83:139
+unknown-slot ( slot self -- ) tst/prototypes.tst:10
+unknown-slot ( slot self -- ) tst/prototypes.tst:23
+verify-hanoi ( departure arrival number -- ) tst/towers-of-hanoi.tst:30
+verify-list ( -- ) tst/bubble-sort.tst:26
+verify-towers-of-hanoi ( -- ) tst/towers-of-hanoi.tst:39
+verify-tree ( t -- f) tst/tree-sort.tst:87
+violet ( -- item) tst/bitsets.tst:16
+wait ( semaphore -- ) lib/multi-tasking.f83:175
+where ( self -- x y) tst/objects.tst:123
+where ( self -- x y) tst/objects.tst:31
+where ( self -- x y) tst/prototypes.tst:43
+where ( self -- x y) tst/prototypes.tst:53
+white ( -- item) tst/bitsets.tst:9
+white ( -- item) tst/mappings.tst:19
+who ( -- ) lib/multi-tasking.f83:124
+wire ( x -- ) tst/channels.tst:13
+withdraw ( money self -- ) tst/objects.tst:156
+withdraw ( money self -- ) tst/prototypes.tst:104
+withdraw ( money self -- ) tst/prototypes.tst:89
+withdraw ( x self -- ) tst/objects.tst:37
+word ( -- ) lib/bitfields.f83:102
+word ( -- ) lib/multi-tasking.f83:307
+word ( -- ) lib/objects.f83:86
+word ( -- ) lib/structures.f83:122
+wrd: ( offset1 --- offset2) tst/tree-sort.tst:46
+wrds: ( offset1 size --- offset2) tst/tree-sort.tst:45
+write ( self -- ) tst/objects.tst:127
+write ( self -- ) tst/objects.tst:160
+write ( self -- ) tst/objects.tst:28
+write ( self -- ) tst/objects.tst:99
+write ( self -- ) tst/prototypes.tst:108
+write ( self -- ) tst/prototypes.tst:17
+write ( self -- ) tst/prototypes.tst:27
+write ( self -- ) tst/prototypes.tst:45
+x ( -- double) tst/double.tst:14
+x ( -- x y) tst/rationals.tst:52
+x ( a b -- b) tst/macros.tst:14
+x: ( self -- value) tst/prototypes.tst:39
+y ( -- low high) tst/double.tst:25
+y ( -- num denum) tst/rationals.tst:39
+y: ( self -- value) tst/prototypes.tst:40
+yellow ( -- item) tst/bitsets.tst:13
+yellow ( -- item) tst/mappings.tst:21
+zero ( -- num denom) lib/rationals.f83:62
+zero-or-more ( symbol -- ) lib/parser.f83:236
+zero-or-one ( symbol -- ) lib/parser.f83:228
+{ ( -- ) lib/bitsets.f83:124
+{ ( -- ) lib/sets.f83:55
+} ( -- bitset) lib/bitsets.f83:128
+} ( -- set) lib/sets.f83:59

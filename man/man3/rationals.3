@@ -1,0 +1,193 @@
+.TH RATIONALS 3X "August 6, 1990"
+.SH NAME
+rationals \- rational number library
+.SH SYNOPSIS
+.B "#include rationals.f83"
+.LP
+.B "rationals"
+.SH DESCRIPTION
+The
+.IR tile
+forth rational number library. Allows definition and manipulation of
+rational numbers. Defines a recognition function so that standard
+rational notation may be used, i.e., <num>/<denom>, where <num> and
+<denom> are integer values. The rational number system also includes
+the numbers "undefined" and "infinity". All rational number functions
+normalize their results to maintain as small numbers as possible.
+Overflow conditions are not checked. Rational numbers are maintained 
+on the stack as an integer number pair. No extra memory is required 
+for arithmetic operations. Double number stack words may be used to
+mainipulate the rational number.
+.TP
+.B
+rational -infinity ( -- num denom)
+The rational number constant for minus infinity. 
+.TP
+.B
+: 1/r ( num1 denom1 -- num2 denom2)
+Returns the result of dividing one by the rational number, "num1"/"denom1".
+.TP
+.B
+: ?r< ( num1 denom1 num2 denom2 -- bool)
+Returns "true" if the rational number, "num1"/"denom1", is arithmetic
+less than the rational number, "num2"/"denom2" else "false".
+.TP
+.B
+: ?r= ( num1 denom1 num2 denom2 -- bool)
+Returns "true" if the rational number, "num1"/"denom1", is arithmetic
+equal than the rational number, "num2"/"denom2" else "false".
+.TP
+.B
+: ?r> ( num1 denom1 num2 denom2 -- bool)
+Returns "true" if the rational number, "num1"/"denom1", is arithmetic
+greater than the rational number, "num2"/"denom2" else "false".
+.TP
+.B
+: ?rational ( str -- [num denom true] or [str false]) recognizer
+The rational number vocabulary literal recognizer function. Will
+determinate if the string is a rational number using the syntax
+"<num>/<denom>", where <num> is an integer and <denom> a positive
+number. The rational number is normalized using the function,
+"rnormalize", and the value return with the flag "true". If the
+string is not a rational number the string is returned with
+the flag "false"
+.TP
+.B
+struct.type RATIONAL ( -- )
+Used in the following form:
+.br
+.B RATIONAL 
+.I <name>
+.B ( -- rational)
+.br
+to create a rational variable. The variable should be accessed with
+the double number memory access functions, "2@" and "2!". The structure
+type "RATIONAL" contains two private fields; "+num" and "+denom".
+.TP
+.B
+: i>r ( x -- num denom)
+Converts the integer value to a rational number.
+.TP
+.B
+rational infinity ( -- num denom)
+Returns the value for the rational number for infinity.
+.TP
+.B
+: r* ( num1 denom1 num2 denom2 -- num3 denom3)
+Returns the product of the two rational numbers, "num1"/"denom1" and
+"num2"/"denom2". The result is always normalized.
+.TP
+.B
+: r+ ( num1 denom1 num2 denom2 -- num3 denom3)
+Returns the sum of the two rational numbers, "num1"/"denom1" and
+"num2"/"denom2". The result is always normalized.
+.TP
+.B
+: r- ( num1 denom1 num2 denom2 -- num3 denom3)
+Returns the difference of the two rational numbers, "num1"/"denom1" and
+"num2"/"denom2". The result is always normalized.
+.TP
+.B
+: r. ( num denom -- )
+Displays the rational number in the standard format, "num"/"denom".
+If the value is zero or infinity these strings are displayed.
+.TP
+.B
+: r/ ( num1 denom1 num2 denom2 -- num3 denom3)
+Returns the quotient of the two rational numbers, "num1"/"denom1" and
+"num2"/"denom2". The result is always normalized.
+.TP
+.B
+: r>i ( num denom -- x)
+Converts the rational number to an integer. The result is truncated.
+.TP
+.B
+: rational ( num denom -- )
+Used in the following form:
+.br
+.I <num> <denom>
+.B rational
+.I <name>
+.B ( -- num denom)
+.br
+to create a rational number constant. The rational number is restored
+when the entry is used.
+.TP
+.B
+vocabulary rationals ( -- )
+The rational number extension vocabulary. Include into the vocabulary
+search set, "context", to allow access of this library.
+.TP
+.B
+: rnegate ( num1 denom1 -- num2 denom2)
+Returns the result of negating the rational number, "num1"/"denom1".
+.TP
+.B
+: rnormalize ( num1 denom1 -- num2 denom2)
+Normalizes the rational number, "num1"/"denom1", towards zero using
+greatest common divisor.
+.TP
+.B
+rational undefined ( -- num denom)
+The rational number constant for undefined.
+.TP
+.B
+rational zero ( -- num denom)
+The rational number constant for zero. The value "0/0" may also be
+used for zero.
+.SH INTERNALS
+Private definitions in the 
+.I rationals
+vocabulary;
+.TP
+.B
+.TP
+.B
+long +denom ( rational -- addr) private
+Access field within a "RATIONAL" structure instance, variable, to the
+denominate number.
+.TP
+.B
+long +num ( rational -- addr) private
+Access field within a "RATIONAL" structure instance, variable, to the
+numerate number.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR structures(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

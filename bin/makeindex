@@ -1,0 +1,35 @@
+#! /bin/sh
+# NAME
+#	makeindex - create index file for forth-83 source files
+# SYNOPSIS
+#	makeindex <files>
+# DESCRIPTION
+#	Locates and filters all definition lines in forth-83 source
+#
+# OPTIONS
+#	none
+# SEE ALSO
+#	tile(1), grep(1)
+# AUTHOR
+#	Mikael R.K. Patel
+#	Computer Aided Design Laboratory (CADLAB)
+#	Department of Computer and Information Science
+#	Linkoping University
+#	S-581 83 LINKOPING
+#	SWEDEN
+#	Email: mip@ida.liu.se
+# HISTORY
+# 	Created on: 	03 September 1990
+#	Lasted updated:	
+
+if [ "$1" = "" ]
+then
+	echo "Usage:  makeindex file ..."
+else
+	egrep -n " \-\-" $* | \
+	egrep -v "init|does|exception|block\[ \(" | \
+	forth index.f83 -s index | \
+	egrep -v "TILE|Loading" | \
+	sort
+fi
+

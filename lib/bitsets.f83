@@ -1,0 +1,180 @@
+\
+\  BIT VECTOR REPRESENTED SETS
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 25 July 1990
+\
+\  Last updated on: 6 August 1990
+\
+\  Dependencies:
+\       (forth) forth, macros, blocks
+\
+\  Description:
+\       Forth level definition of bit vector represented sets and
+\       common set operations. Each bit vector set may contain at
+\       most 32 items as the set is maintained as a stack element.
+\       The set operations are very fast in this representation.
+\       Most operations are only one forth primitive, e.g., "and", 
+\       "or", etc.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Bitsets definitions...) cr
+
+#include macros.f83
+#include blocks.f83
+
+vocabulary bitsets ( -- )
+
+macros blocks bitsets definitions 
+
+: bitset.type ( -- bitset.type item0)  
+  create here 0 , 1
+does> ( bitset.type -- )
+  drop variable
+;
+
+: item ( item1 -- item2)  
+  create dup , 2*
+does> ( item -- item)
+  @
+;
+
+: bitset.end ( bitset.type item3 -- )  
+  drop last swap ! 
+;
+
+0 constant empty-bitset ( -- bitset0)
+
+: (>item) ( item bitset.type -- entry)
+  dup >r >body @
+  begin
+    2dup >body @ =
+    if swap r> 2drop exit then
+    @ r@ over =
+  until
+  2drop r> drop false
+; private
+
+: >item ( item -- entry)
+  ' [compile] literal ?compile (>item)
+; immediate
+
+: add-bitset ( item bitset1 -- bitset2) 
+  or 
+; macro
+
+: union-bitset ( bitset1 bitset2 -- bitset3) 
+  or 
+; macro
+
+: intersection-bitset ( bitset1 bitset2 -- bitset3)
+  and
+; macro
+
+: remove-bitset ( item bitset1 -- bitset2) 
+  swap not and 
+; macro
+
+: difference-bitset ( bitset1 bitset2 -- bitset3) 
+  not and 
+; macro
+
+: size-bitset ( bitset -- num)
+  0 swap
+  begin
+    ?dup
+  while
+    dup 0<
+    if swap 1+ swap then
+    2*
+  repeat
+;
+
+: ?empty-bitset ( bitset -- bool)
+  0=
+; macro
+
+: ?member-bitset ( item bitset -- bool)
+  and boolean
+; macro
+
+: { ( -- )
+  compiling 0 [compile] [ 
+; immediate
+
+: } ( -- bitset)
+  empty-bitset
+  begin
+    swap ?dup
+  while
+    union-bitset
+  repeat
+  swap 
+  if ] then
+; 
+
+: map-bitset ( bitset block[ item -- ] -- )
+  >r 1 
+  begin
+    ?dup
+  while
+    2dup and
+    if r@ rot >r over >r
+       call
+       2r> swap
+    then
+    2*
+  repeat
+  r> 2drop
+;
+
+: ?map-bitset ( bitset block[ item -- bool] -- )
+  >r 1 
+  begin
+    ?dup
+  while
+    2dup and
+    if r@ rot >r over >r
+       call
+       2r> swap rot
+       if drop 0 then
+    then
+    2*
+  repeat
+  r> 2drop
+;
+
+: (.bitset) ( bitset bitset.type -- )
+  ." { " swap
+  block[ over (>item) .name space ]; map-bitset
+  ." } " drop
+;
+
+: .bitset ( bitset -- )
+  ' [compile] literal ?compile (.bitset)
+; immediate
+
+forth only

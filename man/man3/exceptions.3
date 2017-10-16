@@ -1,0 +1,188 @@
+.TH EXCEPTIONS 3X "August 6, 1990"
+.SH NAME
+exceptions \- tile kernel error handling functions
+.SH SYNOPSIS
+.B forth
+.SH DESCRIPTION
+The
+.IR tile
+kernel word set for support of exception definition and management.
+Exceptions may be signaled by the environment (such as arithmetic
+or memory segmentation error) or raised by functions in an application.
+The 
+.IR tile
+forth virtual machine maintains exception frames. An exception frame
+is a copy of the state of the virtual machine when a colon definition
+with error handling is entered. This state may be used to restore the
+virtual machine when an error occurs. 
+.LP
+An exception block is part of a colon definition and marked in a
+syntax style similar to the high level management block "does>". This
+block will receive the error flag (signal or exception) and the machine
+is restored if an error occurs. Exception blocks may be nested. A
+function with error handling may call functions with error handling 
+and so on. The cost of an error handling block corresponds to the cost
+of saving all virtual machine registers in an exception block on the
+return stack.
+.LP 
+Exceptions should be used to simplify control structures where the
+programmer is otherwise forced to mix the control structure for the
+algorithm with the control structure for the error situations.
+.TP
+.B
+code exception ( --- )
+Used in the following form:
+.br
+.B exception 
+.I <exception-name>
+.B ( -- exception)
+.br
+to define an exception symbol. An exception may be raised using:
+.br
+.I <exception-name>
+.B raise
+.br
+The defined "exception" returns a pointer to the entry on the parameter
+stack when used and may be directly displayed with the word ".name".
+.TP
+.B
+code exception> ( [signal] or [exception] -- ) compilation immediate
+Used within a colon definition to mark the beginning of the
+exception section of the definition:
+.br
+.B : 
+.I <name> 
+.B ( ... )
+.br
+.B ... 
+.I <colon-definition>
+.B ...
+.br
+.B
+exception> ( [signal] or [exception] -- ) 
+.br
+.B ...
+.I <error-handling>
+.B ...
+.br
+.B ;
+.br
+If an error occurs or an "exception" is raised during the
+execution of the code definition section the control is past
+to the latest exception block, and the signal number or the
+exception is past as a parameter. The status of the stacks are
+restored to the situation before the execution of the most recent
+definition with an exception block. To pass the exception upwards,
+to the next exception block, the function "raise" should be used.
+.TP
+.B
+vocabulary exceptions ( -- )
+Vocabulary containing the exception management definitions.
+Allows definitions of forth level capturing of errors. Uses
+a syntax style similar Ada to make the beginning of an exception
+section within a colon definition. Include into the vocabulary
+search structure, "context", to allow access of these extensions.
+.TP
+.B
+code raise ( [signal] or [exception] -- )
+Activates a exceptions handler with signal identification number 
+or an exception symbol. If an exception frame exists the virtual
+machine is restored to this state and resumed. The default action
+taken if no exception block is available is abort with a message
+about the task, and the name of the signal or exception. Signals 
+are generated from the run-time environment.
+.SH INTERNALS
+The following words of the exception extension are mainly used to
+implement the error handling mechanism.
+.TP
+.B
+code (exception;) ( -- ) compilation
+Unlinks the current exception frame from the return stack and
+returns from a colon definition. Compiled by the word "exception>".
+.TP
+.B
+code (exception>) ( addr -- ) compilation
+Builds an exception frame on the return stack and jumps to the
+address given as a parameter, "addr". A colon definition with
+an exception block will have a "code" field with a pointer to
+code section with this word. The virtual machine will push a
+pointer to the parameter field, "addr", and call the exception 
+section.
+.TP
+.B
+code (exceptionunlink;) ( -- ) compilation
+Unlinks the exception frame and argument frame from the stacks
+and returns from the colon definitions. Compiled by the word
+"exception>" when a local frame has been used.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.SH EXAMPLES
+An example showing how to redefine the arithmetic division operation
+for exception and retry:
+.RS
+.LP
+.nf
+.B
+exceptions
+.LP
+.B
+exception zero-division ( -- exception)
+.LP
+.B 
+: div ( x y -- z)
+.B
+	dup 0= if zero-division raise else / then
+.B
+;
+.LP
+.B
+: use-div ( x y -- z)
+.B
+	div
+.B
+exception> ( x y exception -- )
+.B
+	case
+.B
+		zero-division of drop endof
+.B
+		raise ( pass exception upwards)
+.B
+	endcase
+.fi
+.RE
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode 
+of the entry is indicated together with the parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

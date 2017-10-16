@@ -1,0 +1,393 @@
+.TH STRUCTURES 3X "August 6, 1990"
+.SH NAME
+structures \- aggregated data definitions
+.SH SYNOPSIS
+.B "#include structures.f83"
+.LP
+.B "structures"
+.SH DESCRIPTION
+Allows composition of data field description to build structures.
+A basic language extension library in the
+.IR tile
+forth kernel and used throughout the source code library to describe
+data structures. The "structures" package extends the traditional
+"record" or "structure" concept and allows initialization and high
+level management code to be defined together with the structure
+itself.
+.TP
+.B
+: align ( -- )
+Used within a structure type field definition section to align the
+current field address to an even address. 
+.TP
+.B
+: as ( -- struct.type) immediate
+Used in the following form:
+.br
+.B as 
+.I <struct-type-name>
+.B ( -- struct.type)
+.br
+Returns the address of the body of the structure type information. 
+This address may be passed to the structure instance initialization
+function, "initiate".
+.TP
+.B
+: assign ( x y -- ) immediate
+Used in the following form:
+.br
+.I x y
+.B assign
+.I <struct-type-name>
+.br
+or
+.br
+.I x y 
+.B assign
+.I <prim-type-name>
+.br
+Assigns the structure or primitive pointed to by "y" the value 
+of "x". The primitive types are equivalent to the structure
+type field names, "byte", "word", "long", "ptr" and "enum".
+.TP
+.B
+struct.field byte ( -- )
+Used in the following form:
+.br
+.B byte
+.I <field-name>
+.B ( addr1 -- addr2)
+.br
+within a structure type definition section to create an access 
+field name to a byte.
+.TP
+.B
+: bytes ( n -- )
+Used in the following form:
+.br
+.I <number> 
+.B bytes
+.I <field-name>
+.B ( addr1 -- addr2)
+.br
+within a structure type definition section to create a field
+access name to a given 
+.I <number>
+of bytes.
+.TP
+.B
+struct.field enum ( -- )
+Used in the following form:
+.br
+.B enum
+.I <field-name>
+.B ( addr1 -- addr2)
+.br
+within a structure type definition section to create a field
+access name to an enumerate. The size of an enumerate field is
+four bytes.
+.TP
+.B
+: initiate ( addr struct.type -- )
+Used in the following form:
+.br
+.I <instance>
+.B as
+.I <struct-type-name>
+.B initiate
+.br
+Take a pointer to a memory area and initializes it according to 
+the initialization code for the structure type given as the second
+parameter. Parameters to this code section can be passed as usual
+on the parameter stack.
+.TP
+.B
+struct.field long ( -- )
+Used in the following form:
+.br
+.B long
+.I <field-name>
+.B ( addr1 -- addr2)
+.br
+within a structure type definition section to create a field access
+name to a long number. The size of a long is four bytes.
+.TP
+.B
+: new-struct ( -- addr) immediate
+Used in the following form:
+.br
+.B new-struct
+.I <struct-type-name>
+.B ( -- addr)
+.br
+to allocate and initialize an instance of a structure type. A pointer
+to the instance is returned. The instance is not bound to any variable. 
+.TP
+.B
+: not-equal ( x y -- bool) immediate
+Used in the following form:
+.br
+.I x y
+.B not-equal
+.I <struct-type-name>
+.br
+or
+.br
+.I x y 
+.B not-equal
+.I <prim-type-name>
+.br
+to compare two structure instances. The primitive types are equivalent
+to the structure type field names, "byte", "word", "long", "ptr" and 
+"enum".
+.TP
+.B
+struct.field ptr ( -- )
+Used in the following form:
+.br
+.B ptr 
+.I <field-name>
+.B ( addr1 -- addr2)
+.br
+within a structure type definition section to create a field access
+name to a pointer. The size of a pointer is four bytes.
+.TP
+.B
+: sizeof ( -- num) immediate
+Used in the following forms:
+.br
+.B sizeof
+.I <struct-type-name>
+.br
+or	
+.br
+.B sizeof
+.I <prim-type-name>
+.br
+Returns the size, in bytes, of a structure or primitive type. The
+primitive types are "byte", "word", "long", "ptr" and "enum".
+.TP
+.B
+: struct ( -- )
+Used in the following form:
+.br
+.B struct
+.I <struct-type-name> 
+.I <field-name>
+.B ( addr1 -- addr2)
+.br
+within a structure type definition section to create a field access
+name to a structure. The structure is not initialized automatically
+by the structure type. This should be performed by the initialization
+code of the structure type it is a part of. This may be performed with
+the words "as" and "initiate". Remember to pass necessary parameters
+to the initialization code.
+.TP
+.B
+: struct.does ( addr -- ) immediate compilation
+Used within a structure type definition section to define the end 
+of the structure layout or initialization code and the beginning of
+the instance action code. At run-time, performed for entry bounded
+(named) instance, the code receives a pointer to the instance as 
+parameter.
+.TP
+.B
+: struct.end ( -- ) immediate
+Used to terminate a structure type definition.
+.TP
+.B
+: struct.init ( addr -- )
+Used within a structure type definition section to terminate the
+structure layout and the beginning the definition of the initialization
+ code section. At run-time the code receives a pointer to the instance
+as a parameter.
+.TP
+.B
+: struct.type ( -- )
+Used in the following forms:
+.br
+.B struct.type 
+.I <struct-type-name>
+.B ( ... -- )
+.br
+.I <struct-type-layout>
+.br
+.B struct.init ( ... addr -- ...)
+.br
+.I <initialization-part>
+.br
+.B struct.does ( ... addr -- ...)
+.br
+.I <instance-part>
+.br
+.B struct.end
+.br
+and then:
+.br
+.B <struct-type-name> 
+.I <instance-name>
+.br
+Starts the definition of a structure type. The layout
+section 
+.I <struct-type-layout> 
+may contain the words;
+.I <n>
+.B bytes
+.I <field-name>,
+allocates "n" bytes,
+.B byte 
+.I <field-name>,
+a byte,
+.B word 
+.I <field-name>,
+a word,
+.B long
+.I <field-name>,
+a long,
+.B ptr
+.I <field-name>,
+a pointer,
+.B enum
+.I <field-name>,
+an enumerative, and
+.B struct
+.I <struct-type-name> 
+.I <field-name>,
+a structure. To align a field to even address use "align".
+The initialization code receives a pointer to the block to
+initialize and any additional parameters. Thus additional memory
+may be allocated directly after the block. If the structure
+contains structure fields these should be initialized by the
+initialization code. For this "as" and "initiate" are used;
+.I <instance> 
+.B as
+.I <struct-type-name> 
+.B initiate.
+The normal action performed by a instance of a structure
+type is to return the address to the instance. The optional
+"struct.does" part redefines the normal action of a created
+structure block. It receives a pointer to the instance as
+parameter and any additional parameters. The sections
+"struct.init" and "struct.does" are optional.
+.TP
+.B
+vocabulary structures ( -- )
+Vocabulary for structure type extensions. Include into the 
+vocabulary search structure, "context", to allow use of
+structures and description of aggregated data structures.
+.TP
+.B
+: this ( -- addr)
+Returns the compilation address of the latest defined word.
+.TP
+.B
+struct.field word ( -- )
+Used in the following form:
+.br
+.B word
+.I <field-name>
+.B ( addr1 -- addr2)
+.br
+within a structure type definition to create a field access
+name to a word. The size of a word is two bytes.
+.SH INTERNALS
+Private definitions in the 
+.I structures
+vocabulary;
+.TP
+.B 
+field +size ( struct.type -- addr) private
+Field for accessing the size of a structure type. This field is
+a long containing the number of bytes to allocate for an instance
+of the structure type.
+.TP
+.B
+field +initiate ( struct.type -- addr) private
+Field for accessing the initialization code of a structure type.
+This field is a "ptr" containing a pointer to the initialization 
+code for the structure type. A zero value, "nil", indicates that 
+the structure type does not perform initialization.
+.TP
+.B
+: struct.field ( bytes -- ) private
+Used in the following form:
+.br
+.I <bytes> 
+.B struct.field
+.I <field-type-name>
+.br 
+to create additional field types other than "byte" etc.
+.TP
+.B
+: make-struct ( struct.type -- addr) private
+Given a pointer to a structure type information block, as generated
+by "as", allocates memory in the dictionary and initializes it.
+Returns a pointer to the created instance.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.SH EXAMPLES
+An example showing how to defined a list structure:
+.RS
+.LP
+.nf
+.B
+struct.type LIST ( -- )
+.B
+	ptr +next ( list -- addr)
+.B
+struct.init ( list -- )
+.B
+	nil swap +next !
+.B 
+struct.end
+.LP
+.B 
+sizeof LIST . 
+.B
+new-struct LIST constant x
+.LP
+.B 
+LIST y
+.LP
+.fi
+.RE
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.PP
+The "structures" library optimizes the first field so that access
+becomes an immediate word with no effect. The most common accessed
+field should be placed first in a "structure" definition.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

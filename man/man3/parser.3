@@ -1,0 +1,364 @@
+.TH PARSER 3X "August 21, 1990"
+.SH NAME
+parser \- top down parser with backtrack and semantic binding
+.SH SYNOPSIS
+.B "#include parser.f83"
+.LP
+.B parser
+.SH DESCRIPTION
+Top down parser with backtrack and semantic attributed grammar. Translates
+string using a grammar to a sequence of semantic actions in forth.
+.TP
+.B
+variable >break ( -- addr)
+Pointer to scanner break function. The default function is the
+parser break function "break-on-special". The parser also supports
+the forth entry break function "break-on-white-space".
+.TP
+.B
+variable >buffer ( -- addr)
+Current buffer position during parsing. Pointer into the "buffer".
+.TP
+.B
+variable >skip ( -- addr)
+Pointer to scanner skip function. The default function is the
+parser skip function "skip-white-space".
+.TP
+.B
+: bind ( addr -- )
+Appends the given parameter as a literal value to the list of 
+semantics. Should be used by "primary" functions to bind scanned data
+such as numbers, strings, and identifiers.
+.TP
+.B
+: break-on-special ( addr -- bool)
+Default break character function for scan. Returns "true" if the
+current character is a break character. The default function
+will return "false" if the character is a letter or a digit else
+true.
+.TP
+.B
+: break-on-white-space ( addr -- bool)
+Alternative break character function for scan used by entry
+to scan for forth words. Returns "true" if the current character
+in the input buffer is a white space (less or equal to a space
+character). Used by the parser primary "entry".
+.TP
+.B
+variable buffer ( -- addr)
+Parser scanner buffer pointer. May be assigned to an application
+buffer to parse.
+.TP
+.B
+symbol empty ( -- symbol)
+Symbol for basic primary function; 
+.I <empty>.
+Basic primary function which always returns "true".
+.TP
+.B
+: end.syntax ( -- ) immediate compilation
+Marks the end of a syntax rule definition.
+.TP
+.B
+: end.primary ( -- ) immediate compilation
+Marks the end of a primary function.
+.TP
+.B
+symbol entry ( -- symbol)
+Symbol for basic primary function; 
+.I <entry>.
+Basic primary function which returns "true" is the next token is
+an entry in the current vocabulary search path. The next token may
+have a vocabulary prefix. In this case the token is located in the
+given vocabulary. The entry pointer is appended as a literal to the
+list of semantics.
+.TP
+.B
+symbol eoln ( -- symbol)
+Symbol for basic primary function; 
+.I <eoln>.
+Basic primary function which returns "true" when no more tokens
+exist in the parser buffer.
+.TP
+.B
+symbol identifier ( -- symbol)
+Symbol for basic primary function; 
+.I <identifier>.
+Basic primary function which returns "true" if the next token is
+an identifier. The string address and length are appended as
+literals to the list of semantics.
+.TP
+.B
+: interact ( symbol -- )
+Interaction top loop using the parameter symbol as parse goal.
+The top loop will perform the following operation; read line
+from input stream, parse the line with the given goal syntax,
+and if a parse is possible execute the semantic actions.
+The top loop is repeated until the token "forth" is given.
+.TP
+.B
+symbol number ( -- symbol)
+Symbol for basic primary function; 
+.I <number>.
+Basic primary function which returns "true" if the next token is
+a number. The value of the number is appended as a literal to
+the list of semantics.
+.TP
+.B
+: no-semantic ( -- true)
+Parser virtual machine instruction for the end of a rule 
+with no semantic function. Will always return "true" and exit 
+the current rule.
+.TP
+.B
+: non-terminal ( symbol -- [] or [false])
+Parser virtual machine instruction for parsing a non-terminal
+symbol. Will continue the execution of the rule if "true" else
+return to the syntax function. 
+.TP
+.B
+parser ( -- )
+The Top Down Parser Virtual Machine definitions vocabulary. Include
+into the vocabulary search set, "context", to allow access to this
+library.
+.TP
+.B
+: parse ( symbol -- [semantics] or [false])
+Given a symbol reference, parses the current buffer contents and
+if parsed the generated list of semantics is returned else false.
+The list of semantics is a block of code and may be executed
+with the block function call.
+.TP
+.B
+: parse" ( symbol -- ) execution
+Used in the following form:
+.br
+.I <symbol>
+.B 
+parse" 
+.I <parse string> 
+.B
+"
+.br
+to give a string to parse. The string is parsed with the given
+goal syntax symbol and if parsed the semantics actions are called
+else an error message is given and an abort is performed.
+.TP
+.B
+: primary ( symbol -- )
+Used in the following form:
+.br
+.I <symbol>
+.B primary 
+.B ( -- bool) 
+.B ...
+.I <definition> 
+.B ...
+.B end.primary
+.br
+to define a primary function. These are used by the parser when
+a syntax definition is missing or fails to continue the parse
+process. The primary function should scan the buffer at the
+current position and signal to the parser if the next token
+is accepted or not. The function should return true when
+accepting the next token and false when rejecting it. The word
+"bind" should be used to capture data and pass it to the semantic
+actions.
+.TP
+.B
+: scan ( -- addr n)
+Token scanning function. Returns address to token in buffer and
+length of token. If the buffer contains no more characters a
+zero length is returned.
+.TP
+.B
+: semantic ( -- true)
+Parser virtual machine instruction for appending the succeeding
+function to the list of semantics. Will always return "true" and
+exit the current rule.
+.TP
+.B
+: semantic, ( addr -- )
+Appends the given semantic action function to the list of semantics.
+.TP
+.B
+: skip-white-space ( addr1 -- addr2)
+Default skip character function of scanner. Skips all characters
+until a character which is greater than blank or null. The parameter
+is the current position in the scanner buffer. The return value is
+address to the first non-skip character or a null character.
+.TP
+.B
+struct.type symbol ( -- ) 
+Structure definition of a parser symbol. Used in the following form:
+.br
+.B symbol
+.I <name>
+.B ( -- symbol)
+.br
+to create a symbol which may occur in syntax and primary definitions.
+.TP
+.B
+: syntax ( symbol -- )
+Used in the following form:
+.br
+.I <symbol>
+.B syntax
+.B ...
+.B <parser virtual machine definition> 
+.B ...
+.B end.syntax
+.br
+to generate a grammar rule. The definition should contain 
+the parser virtual machine definitions; "terminal", "non-terminal",
+"zero-or-one", "zero-or-more", and ended with one of the following; 
+"semantic", and "no-semantic". Each of these functions takes a symbol
+as a parameter. 
+.TP
+.B
+: terminal ( symbol -- [] or [false])
+Parser virtual machine instruction for matching a terminal
+symbol. Will continue the execution of the rule if "true" else
+return to the syntax function.
+.TP
+.B
+: zero-or-more ( symbol -- )
+Parser virtual machine instruction for parsing a non-terminal
+symbol zero or more times. Will always continue the execution of
+the rule.
+.TP
+.B
+: zero-or-one ( symbol -- )
+Parser virtual machine instruction for parsing a non-terminal
+symbol zero or one time. Will always continue the execution of
+the rule.
+.SH INTERNALS 
+The
+.IR parser
+vocabulary contains the following private definitions.
+.TP
+.B 
+ptr +entry ( symbol -- addr) private
+Access field to entry reference in a "symbol" structure.
+.TP
+.B
+ptr +next ( rule -- addr) private
+Access field to next rule in syntax list in a "rule" structure.
+.TP
+.B
+ptr +primary ( symbol -- addr) private
+Access field to primary function in a "symbol" structure.
+.TP
+.B
+ptr +rule ( rule -- addr) private
+Access field to virtual parse machine code for a rule structure.
+.TP
+.B
+ptr +syntax ( symbol -- addr) private
+Access field to syntax rule list in a symbol structure.
+.TP
+.B
+variable >semantics ( -- addr) private
+Pointer to end of list of semantics in the vector "semantics".
+.TP
+.B
+: backtrack ( x y  -- ) private
+Backtracks the parser to the state given by the environment block
+on stack captured by "seize".
+.TP
+.B
+create interact-buffer ( -- addr) private
+Internal buffer used for interaction top loop.
+.TP
+.B
+constant interact-buffer-size ( -- num) private
+Size of internal buffer used for interaction top loop.
+.TP
+.B
+: primary ( symbol -- bool) private
+Executes a symbols primary function. Returns the value from
+this function if available else "false".
+.TP
+.B
+: release ( rule x y -- ) private
+Releases an environment block build by a "seize" call.
+.TP
+.B
+struct.type rule ( -- ) private
+Structure definition of a syntax rule.
+.TP
+.B
+: rule ( rule -- bool) private
+Executes the parser virtual machine code definition for a rule.
+.TP
+.B
+: seize ( rule -- rule x y rule) private
+Captures the current state of the parser. This environment may
+be released or used to "backtrack" the parser.
+.TP
+.B
+create semantics ( -- addr) private
+List of semantic actions. Collected during the parse and is returned
+by parse when it succeeds. The list is a compiled block of forth
+definitions.
+.TP
+.B
+constant semantics-size ( -- num) private
+Size of list of semantics.
+.TP
+.B
+: syntax ( symbol -- bool) private
+Given a symbol performs the basic top down parsing with the 
+symbols syntax definition as goal. Returns "true" if the syntax
+parse succeeds else false.
+.TP
+.B
+create token ( -- addr) private
+Internal buffer for tokens used by "entry" primary function.
+.TP
+.B
+constant token-size ( -- num) private
+Size of internal buffer for token. Used by basic primary function
+"entry".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR internals(3X),
+.IR compiler(3X),
+.IR blocks(3X),
+.IR structures(3X).
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the
+entries are indicated together with their parameter stack effect.
+.\" .SH WARNING 
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

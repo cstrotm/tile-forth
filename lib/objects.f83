@@ -1,0 +1,178 @@
+\
+\  OBJECT ORIENTED PROGRAMMING LIBRARY: CLASS-INSTANCE MODEL
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 15 August 1990
+\
+\  Last updated on: 3 September 1990
+\
+\  Dependencies:
+\       (forth) forth, prototypes
+\
+\  Description:
+\       This library supports the classical object oriented programming
+\       model of classes and instances. The class domain is here realized
+\       with the prototype library. A class may have a set of methods for
+\       messages, a set of instance variables, and may inherit additional
+\       features from a super class.
+\
+\       A syntax similar to Smalltalk is used. The object, instance, to
+\       receive a message is always the first parameter. A message does
+\       not require a prefix operator. All fields, instance variables,
+\       are accessed with memory access words. The variable names will
+\       retrieve the corresponding position in the instance. The first cell
+\       of an instance is alway a pointer to the class (prototype).
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Objects definitions...) cr
+
+#include prototypes.f83
+
+vocabulary objects ( -- )
+
+prototypes objects definitions
+
+\ Class slots for instance size and instance variable
+
+slot instance-size: ( class -- num) private
+slot instance-variables: ( class -- entry) private
+slot instance-disposed: ( class -- object) private
+
+variable the-class ( -- addr) private
+
+: this-class ( -- class)
+  the-class @ [compile] literal
+; immediate
+
+: subclass ( superclass -- offset0)
+  dup prototype this-prototype the-class ! ?dup
+  if instance-size: else cell then
+;
+
+: bytes ( offset1 size -- offset2)  
+  over field +
+;
+
+: subclass.field ( size -- )  
+  create ,
+does> ( subclass.field -- )
+  @ bytes
+; private
+
+1 subclass.field byte ( -- )
+2 subclass.field word ( -- )
+4 subclass.field long ( -- )
+4 subclass.field ptr  ( -- )
+4 subclass.field enum ( -- )
+
+: align ( offset1 -- offset2)  
+  dup 1 and +
+;
+
+: subclass.end ( offset3 -- )
+  the-class @ tuck -> instance-size: 
+  last over -> instance-variables: 
+  nil over -> instance-disposed:
+  prototype>entry restore
+  nil the-class !
+;
+
+: superclass ( class1 -- class2)
+  parent
+;
+
+: canUnderstand ( message class -- bool)
+  delegate if drop true else 2drop false then
+;
+
+: basicInstanceSize ( class -- num)
+  instance-size:
+;
+
+
+\ Instance class relation access and class name display functions
+
+: class ( object -- addr)
+  @
+;
+
+: .class ( object -- )
+  class .prototype
+;
+
+\ Instance creation and definition functions
+
+forward initiate ( object -- )
+
+: allot-instance ( class -- object)
+  here over , swap instance-size: cell - allot dup >r initiate r>
+; private
+
+: new-instance ( class -- object)
+  dup instance-disposed: ?dup
+  if 2dup @ swap -> instance-disposed: tuck ! else allot-instance then
+;
+
+: dispose-instance ( object -- )
+  dup class 2dup instance-disposed: swap ! -> instance-disposed:
+;
+
+: instance ( class -- )
+  create allot-instance drop
+;
+
+\ Message and method definition
+
+forward doesNotUnderstand ( message object -- )
+
+: send ( object message class -- object)
+  delegate if >r else drop swap doesNotUnderstand then
+;
+
+: message ( -- )
+  message
+does> ( object message -- object)
+  over class send
+;
+
+: .message ( message -- )
+  .message
+;
+
+: method ( -- )
+  the-class @ method 
+;
+
+: super ( -- )
+  the-class @ superclass ?dup
+  if ' >body [compile] literal [compile] literal compile send
+  else
+    the-class @ .class space ." has no superclass" cr abort
+  then
+; immediate compilation 
+
+forth only
+

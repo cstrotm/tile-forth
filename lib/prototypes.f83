@@ -1,0 +1,155 @@
+\
+\  PROTOTYPE ORIENTED PROGRAMMING LIBRARY
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 9 August 1990
+\
+\  Last updated on: 20 August 1990
+\
+\  Dependencies:
+\       (forth) forth, relations
+\
+\  Description:
+\       Prototypes are general objects without dividing the world into classes
+\       and instances. A prototype may have slots for values and  methods for
+\       answering messages. If a prototype lacks the slot or method it may
+\       delegate it by an inheritance relation to another prototype.
+\
+\       This simple model allows code and data sharing on any level compared
+\       to the traditional class-instance model found in most other
+\       programming languages for Object Oriented Programming. The relations
+\       extension is used to implement this library. One predefined relation
+\       is required.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Prototypes definitions...) cr
+
+#include relations.f83
+
+vocabulary prototypes ( -- )
+
+relations prototypes definitions
+
+\ Inheritance relation and delagation function
+
+item inherits ( -- relation) private
+
+: delegate ( relation prototype -- [relation prototype false] or [value true])
+  dup >r
+  begin
+    ?get-relation if r> drop true exit then
+    inherits swap get-relation dup 0=
+  until
+  drop r> false
+; 
+
+: this-prototype ( -- prototype)
+  this-item
+;
+
+: new-prototype ( parent -- prototype)
+  nil new-item inherits swap put-relation
+;
+
+: prototype ( parent -- )
+  item inherits this-prototype put-relation
+;
+
+: parent ( prototype -- addr)
+  inherits swap get-relation
+;
+
+: prototype>entry ( prototype -- entry)
+  item>entry
+;
+
+: .prototype ( prototype -- )
+  dup item>entry ?dup if .name drop else ." prototype#" 0 .r then
+;
+
+: .relations ( prototype -- )
+  dup .relations
+  begin
+    inherits swap get-relation ?dup
+  while
+    dup cr .relations
+  repeat
+;
+  
+\ Message and method definition function
+
+forward unknown-message ( message prototype -- )
+
+: message ( -- )
+  item
+does> ( prototype message -- )
+  over delegate if >r else drop swap unknown-message then
+;
+
+: .message ( message -- )
+  .item
+;
+
+variable the-prototype ( -- addr) private
+
+: method ( prototype -- )
+  dup the-prototype !
+  ' >body swap 2dup
+  nil -rot put-relation
+  here -rot put-relation ]
+;
+
+: (inherited) ( prototype message -- )
+  over parent dup
+  if delegate
+    if >r exit then
+  then 
+  unknown-message
+; private
+
+: inherited ( -- )
+  the-prototype @ [compile] literal ' >body [compile] literal compile (inherited)
+; immediate compilation 
+
+\ Slot definition and assignment function
+
+forward unknown-slot ( slot prototype -- )
+
+: slot ( -- )
+  item
+does> ( prototype slot -- value)
+  swap delegate not if unknown-slot then
+;
+
+: -> ( value prototype -- )
+  ' >body [compile] literal ?compile swap ?compile put-relation
+; immediate
+
+: .slot ( slot -- )
+  .item
+;
+
+forth only

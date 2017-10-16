@@ -1,0 +1,604 @@
+.TH MULTI-TASKING 3X "August 1, 1990"
+.SH NAME
+multi\-tasking \- tile forth kernel extensions for concurrent programming
+.SH SYNOPSIS
+.B "#include multi-tasking.f83"
+.LP
+.B "multi-tasking"
+.SH DESCRIPTION
+The
+.IR tile
+kernel and forth level extensions to allow concurrent programming
+with tasks, condition variables, semaphores, channels and rendezvous.
+The tasking switch mechanism in the 
+.IR tile
+kernel is not time-multiplexed and applications are required to 
+periodically call the task switch function, "detach", or, "resume",
+or synchronization functions such as semaphores, condition variables, etc.
+This extension implement the major concurrent programming concepts and
+allows programming for a common memory or distributed model. 
+.TP
+.B
+: .task ( task -- )
+Displays the internal state of a task. The state is not the state
+of the running task as this word will display the memory structure
+of a task, and not the virtual machine state. A task cannot display
+its own state.
+.TP
+.B
+constant >terminate ( -- addr)
+Constant containing a pointer to the terminate function. Used
+by "task" to automatically terminate task which arrive at the
+end of their task body, i.e., forth-level code section.
+.TP
+.B
+: ?avail ( chan -- bool)
+Check whether a channel "receive" operation will not block.
+Data is available directly. Returns "true" if data is directly
+available without waiting else "false".
+.TP
+.B
+: ?awaiting ( -- bool) immediate
+Used in the following form:
+.br
+.B ?awaiting 
+.I <rendezvous-name>
+.B ( -- bool)
+.br
+in a server task to check if a client task is waiting for 
+service. Returns "true" if a client task is waiting else
+"false".
+.TP
+.B
+: ?wait ( semaphore -- bool) 
+Checks the semaphore counter to determine if a "wait"
+operation will make a task wait. Returns "true" in this case
+otherwise "false".
+.TP
+.B
+enum.type COMMUNICATION-MODELS ( -- )
+Enumerate type used to select the operation type of a channel.
+The models are; "ONE-TO-ONE", "ONE-TO-MANY", and "MANY-TO-ONE".
+.TP
+.B
+struct.type CHAN ( model -- )
+Used in the following form to create a channel:
+.br
+.I <communication-model> 
+.B CHAN 
+.I <chan-name>
+.B ( -- chan)
+.br
+The channel is represented by two synchronization semaphores
+and a common data area. May be used for three major communication
+styles between tasks. These are defined by the enumeration
+type "COMMUNICATION-MODES". The operations on a channel are
+"send", "receive" and "?avail".
+.TP
+.B
+struct.type CONDITION ( -- )
+Used as in the following form:
+.br
+.B CONDITION 
+.I <condition-name>
+.B ( -- condition)
+.br
+to create and initiate a named condition queue variable. The
+possible operations, other than queue operations, on a condition 
+queue are "await" and "cause".
+.TP
+.B
+enum DELAYED ( -- enum)
+Task status code for task performing "delay". Will resume 
+"RUNNING" after the "delay" operation.
+.TP
+.B
+enum IOWAITING ( -- enum)
+Task status code for task waiting for IO. The foreground task
+is currently the only task allowed to perform io-operations,
+input, as these are not reentrant.
+.TP
+.B
+enum MANY-TO-ONE ( -- enum)
+Selects the many-to-one communication mode of a channel. Several
+sending tasks are allowed to communicate with a service task.
+.TP
+.B
+enum ONE-TO-ONE ( -- enum)
+The channel is to be operated in a one-to-one manner.
+.TP
+.B
+enum ONE-TO-MANY ( -- enum)
+The channel is to be operated in a one-to-many manner. Several
+receiving tasks are possible on the channel. Data sent on the 
+channel is maintained from corruption.
+.TP
+.B
+enum READY ( -- enum)
+Task status code for newly created tasks, ready for scheduling.
+.TP
+.B
+struct.type RENDEZVOUS ( -- )
+Used in the following form:
+.br
+.B RENDEZVOUS
+.I <rendezvous-name>
+.B ( arg -- res)
+.br
+to create a rendezvous name. This name may then be used as
+a function service by some task with "accept".
+.br
+.I <rendezvous-name> 
+.B ( arg -- res)
+.br
+The function always takes one argument and always returns
+one result value. The service block is terminated by the
+word "accept.end". 
+.TP
+.B
+enum RUNNING ( -- enum)
+Task status code for running, scheduled, tasks.
+.TP
+.B
+struct.type SEMAPHORE ( value -- )
+Used in the following form:
+.br
+.I <value> 
+.B SEMAPHORE
+.I <semaphore-name>
+.B ( -- semaphore)
+.br
+to create and initiate a named semaphore. The possible operations
+on a semaphore are "?wait", "wait", and "signal".
+.TP
+.B
+struct.type TASK-HEADER ( -- )
+Definition of the instance structure of a task header. Defines
+the field names for a task; "+queue", "+sp", "+s0", "+rp", "+r0", 
+"+fp", and "+ep".
+.TP
+.B
+enum.type TASK-STATUS-CODES ( -- )
+Enumerate defining the possible task status codes. The codes are;
+"READY", "DELAYED", "RUNNING", "WAITING", "IOWAITING", and
+"TERMINATED".
+.TP
+.B
+enum TERMINATED ( -- enum)
+Task status code for terminated tasks.
+.TP
+.B
+enum WAITING ( -- enum)
+Task status code for task performing a generic wait operation.
+.TP
+.B
+: accept ( -- arg) immediate
+Using in the following form:
+.br
+.B accept
+.I <rendezvous-name>
+.B ( arg -- res)
+.br
+.B ...
+.I <service-definition>
+.B ...
+.br
+.B accept.end
+.br	
+to accept calls on the rendezvous. When a client task calls
+the rendezvous the argument from client is passed to the 
+server task that performed the accept.
+.TP
+.B
+: accept.end ( res -- ) immediate
+Marks the end of an accept block in a server task. The result
+is passed to the client task and both may continue in parallel.
+.TP
+.B
+: activate ( task -- ) 
+Inserts a task first in the queue of runnable task and resumed. 
+The task is assumed to have be scheduled and deactivated. The
+task is now marked as "RUNNING".
+.TP
+.B
+: await ( condition -- )
+Causes the running task to wait for a condition. The task
+is deactivated and places in the queue associated with the 
+condition. The task status is "WAITING" while in the queue.
+.TP
+.B
+task.field byte ( -- )
+Used in the following form:
+.br
+.B byte
+.I <user-name>
+.B ( -- addr)
+.br
+within a task type definitions. Creates a user variable access 
+name to a byte.
+.TP
+.B
+: bytes ( size -- )  
+Used in the following form to create named local structures
+and data within task instances:
+.br
+.I <number> 
+.B bytes 
+.I <user-field-name>
+.B ( -- addr)
+.br
+Should only be used within the layout section of a task type.
+.TP
+.B
+: cause ( condition -- )
+Activates the first waiting task in the condition queue.
+The task status will become "RUNNING".
+.TP
+.B
+: deactivate ( queue task -- ) 
+Removes a task from the queue of runnable task and inserts
+it into the given queue. The task is marked as "WAITING".
+The next runnable task is resumed.
+.TP
+.B
+: delay ( n -- )
+Delays a task a number of task switches. The delay is not
+real-time but relative time. The task status is "DELAYED"
+during the delay.
+.TP
+.B
+code detach ( -- )
+Deactivate the current running task and resumes the next
+task in the queue over runnable tasks.
+.TP
+.B
+task.field enum ( -- )
+Used in the following form:
+.br
+.B enum
+.I <user-name>
+.B ( -- addr)
+.br
+within a task type definitions. Creates a user variable access 
+name to an enumerative, four bytes counter.
+.TP
+.B
+variable foreground ( -- addr)
+Variable containing a pointer to the foreground task.
+.TP
+.B
+code fork ( -- task)
+Copies the current task and returns a pointer to it. The child
+task will receive a pointer to the parent task as result of fork. 
+The parent will receive a pointer to the child task. The child
+is scheduled directly.
+.TP
+.B
+: join ( task -- ) 
+Delay a task until the task given as parameter terminates.
+The task status is "WAITING" during the join delay.
+.TP
+.B
+task.field long ( -- )
+Used in the following form:
+.br
+.B long
+.I <user-name>
+.B ( -- addr)
+.br	
+within a task type definitions. Creates a user variable access 
+name to a long, four bytes.
+.TP
+.B
+task.field ptr ( -- )
+Used in the following form:
+.br
+.B ptr
+.I <user-name>
+.B ( -- addr)
+.br
+within a task type definitions. Creates a user variable access 
+name to a pointer, four bytes.
+.TP
+.B
+vocabulary multi-tasking ( -- )
+Vocabulary containing the multi-tasking extensions to the Forth-83
+Standard. These extensions are realized both as primitives and on
+the forth level.
+.TP
+.B
+: mutex ( -- ) 
+Used in the following form:
+.br
+.B mutex
+.I <semaphore-name>
+.B ( -- semaphore)
+.br
+to create a semaphore for mutual exclusion. Should not be
+used within other structures as this definition is not a
+structure definition but a code definition.
+.TP
+.B
+: new-task ( -- task)
+Used in the following form:
+.br
+.B new-task 
+.I <task-type-name>
+.B ( -- task)
+.br
+to create a new task instance of a task type. Allocates and
+schedules the task instance.
+.TP
+.B
+: receive ( chan -- data)  
+Receives data from channel. Will wait until sender has
+performed "send".
+.TP
+.B
+: resume ( task -- )
+Activates the given task. The task must be a member of the
+runnable tasks, i.e., scheduled and waiting for activation.
+.TP
+.B
+variable running ( -- addr)
+Variable containing a pointer to the current running task.
+.TP
+.B
+code schedule ( task -- )
+Schedules the given task and activates it immediately. 
+.TP
+.B
+: send ( data chan -- ) 
+Sends data on a channel. Sender will wait until receiver has
+performed "receive".
+.TP
+.B
+: signal ( semaphore -- ) 
+If there is a waiting task on the semaphore this task is
+resumed else the semaphore counter is incremented.
+.TP
+.B
+: struct ( -- )
+Creates a named user variable of a structure size. Use 
+in the following form:
+.br
+.B struct 
+.I <struct-type-name> 
+.I <user-name>
+.B ( -- addr)
+.TP
+.B
+code task ( users parameters returns code -- task)
+Used to create a task instance. The "users" parameter defines
+the size of the task local variable area in bytes. The "parameters"
+and "returns" arguments define the size of the tasks parameter
+and return stack in "cells". Last the "code" parameter is a
+pointer to forth-level code. Returns a pointer to a task.
+The task is allocated from the run-time heap and not the dictionary.
+The "memory" extension word "free" should be used to reclaim the
+allocated area if needed.
+.TP
+.B
+: task.body ( -- ) 
+Used within a task type definition structure to indicate the
+beginning of the task body part and the end of the user variables. 
+.TP
+.B
+: task.end ( -- )
+Ends a task type definition.
+.TP
+.B
+struct.type task.type ( parameters returns -- )
+Used in the following form to start the definition of a task
+type: 
+.br
+.I <parameters> <returns> 
+.B task.type 
+.I <task-type-name>
+.br
+.I { <user-variables> }
+.br
+.B task.body
+.br
+.I <task-body-definition>
+.br
+.B task.end
+.br
+The two parameters, parameters and returns, define the size
+in cells of these two areas within a task instance. Local
+user area is defined by the task field names; "byte", "bytes",
+"word", "long", "enum", "ptr", and "struct". 
+.TP
+.B
+code terminate ( -- )
+Terminates the current running task and resumes the next task
+in the runnable task queue.
+.TP
+.B
+code user ( offset -- )
+Used in the following form to create a local, user, variable
+within the task instance:
+.br
+.I <offset> 
+.B user 
+.I <user-name>
+.B ( -- addr)
+.br
+The offset is a relative address from the task pointer.
+.TP
+.B
+: wait ( semaphore -- ) 
+Dequeues the task and places it into the semaphore waiting
+queue if the semaphore counter is zero otherwise the counter
+is decrements and the task continues. The task status is 
+"WAITING" during the semaphore wait delay.
+.TP
+.B	
+: who ( -- ) 
+Displays the current queue of runnable tasks.
+.TP
+.B
+task.field word ( -- )
+Used in the following form:
+.br
+.B word
+.I <user-name>
+.B ( -- addr)
+.br
+within a task type definitions. Creates a user variable access 
+name to a word, two bytes.
+.SH INTERNALS
+Private definitions in the 
+.I multi-tasking
+vocabulary;
+.TP
+.B
+struct CHAN +arg ( rendezvous -- addr) private
+Structure field within a rendezvous which is the channel
+for argument passing to the server task.
+.TP
+.B
+ptr +body ( task.type -- addr) private
+Field access to task type pointer to task body code. 
+.TP
+.B
+long +count ( semaphore -- addr) private
+Field access to semaphore value.
+.TP
+.B
+long +data ( chan -- addr) private
+Field access to the common data area. Used as holding place
+for data sent until received.
+.TP
+.B
+ptr +ep ( task -- addr) private
+Field access of task exception frame pointer. 
+.TP
+.B
+ptr +fp ( task -- addr) private
+Field access of task argument frame pointer. 
+.TP
+.B
+ptr +ip ( task -- addr) private
+Field access of task instruction pointer. 
+.TP
+.B
+struct CONDITION +not.zero ( semaphore -- addr) private
+Field access to semaphore condition for tasks waiting for
+not zero count.
+.TP
+.B
+long +parameters ( task.type -- addr) private
+Field access of number of cells for parameter stack of task type.
+.TP
+.B
+struct QUEUE +queue ( task -- addr) private
+Field access of system queue of task instances.
+.TP
+.B
+ptr +r0 ( task -- addr) private
+Field access of task return stack bottom pointer. 
+.TP
+.B
+struct SEMAPHORE +received ( chan -- addr) private
+Field access to the received synchronization semaphore.
+.TP
+.B
+struct CHAN +res ( rendezvous -- addr) private
+Structure field within a rendezvous which is the channel
+for result passing from the server task to the client task.
+.TP
+.B
+long +returns ( task.type -- addr) private
+Field access of number of cells for return stack of task type.
+.TP
+.B
+ptr +rp ( task -- addr) private
+Field access of task return stack pointer. 
+.TP
+.B
+ptr +s0 ( task -- addr) private
+Field access of task bottom of parameter stack pointer.
+.TP
+.B
+struct SEMAPHORE +sent ( chan -- addr) private
+Field access to the sent synchronization semaphore.
+.TP
+.B
+ptr +sp ( task -- addr) private
+Field access of task parameter stack pointer. 
+.TP
+.B
+enum +status ( task -- addr) private
+Field access of task status. See "TASK-STATUS-CODES" for
+possible codes. 
+.TP
+.B
+long +users ( task.type -- addr) private
+Field access of number of bytes for user area of task type.
+.TP
+.B
+struct CONDITION +waiting ( condition -- queue) private
+Field access to condition queue of waiting tasks. 
+.TP
+.B
+: make-task ( task.type -- task) private
+Creates an anonymous task given a task type instance. Used in the
+following form:
+.br
+.B as
+.I <task-type-name> 
+.B make-task 
+.B ( -- task)
+.br
+.TP
+.B
+: task.field ( size -- ) private
+Fix size field meta-word. Used to create primary set of field
+type names, "byte", "word", "long", "ptr", and "enum". Should
+only be used for definitions internal to "multi-tasking".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR enumerates(3X),
+.IR structures(3X),
+.IR blocks(3X),
+.IR queues(3X).
+.SH EXAMPLES
+For examples see the test and benchmark library (directory "tst").
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+
+

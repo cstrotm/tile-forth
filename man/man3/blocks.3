@@ -1,0 +1,128 @@
+.TH BLOCKS 3X "August 1, 1990"
+.SH NAME
+blocks \- code blocks definition library
+.SH SYNOPSIS
+.B "#include blocks.f83"
+.LP
+.B "blocks"
+.SH DESCRIPTION
+Allows definition and execution of code blocks. An alternative
+to passing colon definitions as arguments and creating special control
+structures. Code blocks are used by the
+.IR tile
+source code library to pass parameters to iterator functions such as
+"map*" and "?map*". These functions perform the iteration over 
+collections of data (such as lists, queues, ranges and sets) 
+and call the code block on each element in the collection.
+.TP
+.B 
+vocabulary blocks ( -- )
+Vocabulary for code block definitions. Include this library by adding 
+the vocabulary to the search set, "context".
+.TP
+.B 
+: block[ ( -- ) immediate
+Used in the following form:
+.br
+.B block[ ( ... ) ...
+.I <block-definition>
+.B ... ];
+.B ( -- block)
+.br
+Marks the beginning of a code block. Compiles a code block until
+"];" and returns the address to the code block. The code block may 
+then be executed using "call". Code blocks may contain definitions 
+of other code blocks. Argument binding and local variables are
+allowed in the code block using the "locals" extension but cannot
+use the words "does>" and "exception>" as these require a 
+vocabulary entry binding.
+.TP
+.B 
+: ]; ( -- block) immediate
+Used in the following form:	
+.br
+.B block[ ( ... ) ...
+.I <block-definition>
+.B ... ];
+.B ( -- block)
+.br
+Marks the end of a code block. Returns a pointer to the code block. 
+If the code block is generated within a colon definition the block
+pointer is returned at run-time.
+.TP
+.B 
+: call ( block  -- )
+Executes a code block. Any parameters used by the code block are
+passed as usual on the parameter stack. Return values are handled
+in the same way.
+.SH INTERNALS
+Private definitions in the 
+.I blocks
+vocabulary;
+.TP
+.B 
+field +block ( addr -- block) private
+Field access variable to calculate the offset to an in-line block
+literals within a compiled section of code.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR compiler(3X).
+.SH EXAMPLES
+An example showing how a function may return a code block which is
+bound to a constant and later called:
+.RS
+.LP
+.nf
+.B 
+: action ( flag -- block) 
+.B 
+	 if block[ 10 + ]; else block[ 10 - ]; then 
+.B 
+;
+.LP
+.B 
+true action constant delayed-action
+.LP
+.B 
+32 delayed-action call
+.LP
+.fi
+.RE
+.SH NOTE
+The function list is sorted in logical order. The type and mode of the
+entries are indicated together with their parameter stack effect.
+.SH WARNING
+The code block may not contain the words "recurse", "tail-recurse",
+"does>" and "exception>" as these require an entry binding, i.e., 
+a colon definition.
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

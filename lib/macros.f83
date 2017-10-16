@@ -1,0 +1,75 @@
+\
+\  MACRO DEFINITIONS
+\
+\  Copyright (C) 1988-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 30 June 1988
+\
+\  Last updated on: 27 July 1990
+\
+\  Dependencies:
+\       (forth) forth, internals, structures
+\
+\  Description:
+\       Allows colon definitions to be marked as macros and expanded
+\       when used in compilation mode (else executed as usual).
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Macros definitions...) cr
+
+#include internals.f83
+#include structures.f83
+
+vocabulary macros ( -- )
+
+structures forth macros definitions
+
+struct.type MACRO ( -- ) private
+  ptr  +body ( macro -- addr) private
+  long +size ( macro -- addr) private
+struct.init ( body size macro -- )
+  tuck +size ! +body !			( Initiate macro structure block)
+struct.does ( macro -- )
+  compiling				( Check compilation state)
+  if dup +body @ here			( Allocate space for copy of body)
+    rot +size @ dup allot cmove		( Allocate and copy)
+  else					( If execution mode)
+    +body @ >r				( Access body and execute)
+  then
+struct.end
+
+: macro ( -- )
+  last >body here over - sizeof ptr -	( Create a new MACRO structure)
+  new-struct MACRO last +parameter !	( Modify parameter field of last)
+  immediate				( and mode field to immediate)
+;
+
+: .macro ( -- )
+  ." macro#" ' >body dup .		( Access macro and print address)
+  ." size: " dup +size @ .		( and the size)
+  ." body: " +body @ .			( and pointer to body of macro)
+;
+
+forth only

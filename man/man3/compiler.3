@@ -1,0 +1,177 @@
+.TH COMPILER 3X "August 1, 1990"
+.SH NAME
+compiler \- tile kernel compiler support functions
+.SH SYNOPSIS
+.B compiler
+.SH DESCRIPTION
+The
+.IR compiler
+vocabulary of the
+.IR tile
+forth kernel contains all primitives compiled by high level words for
+control structures and literals. The primitives are isolated to
+a separate vocabulary to minimize dependencies and increase
+portability.
+.TP
+.B 
+code (+loop) ( n -- ) compilation
+Performs the same action as "(loop)" but uses the top of stack
+value as the increment, "n", of the loop index. Checks if the loop 
+limit has been exceeded. Compiled by the word "+loop".
+.TP
+.B 
+code (.") ( -- ) compilation
+Prints the in-line string on the current output stream. Compiled
+by the word "."".
+.TP
+.B 
+code (;) ( -- ) compilation
+Performs the run-time action of returning from a colon definition.
+Compiled by the word ";".
+.TP
+.B 
+code (?branch) ( flag -- ) compilation
+Performs the run-time action of conditionally branching in 
+threaded code. If the "flag" is zero a branch is performed
+using a literal succeeding this word else the literal is 
+skipped. The branch literal is the relative address. Compiled
+by the words "if", "while", "until", and "of".
+.TP
+.B 
+code (?do) ( end start -- ) compilation
+Performs the run-time action of initializing for a loop block if
+the "start" and "end" index are not equal else skips the block. 
+Moves the two parameters, "end" and "start", to the return stack
+and a pointer to the relative address literal succeeding this word
+so that "leave" may be performed in any section of the looped block.
+Compiled by the word "?do".
+.TP
+.B 
+code (abort") ( flag -- ) compilation
+Performs the run-time action of checking the error "flag"
+and if non-zero, true, aborts the current computation. Uses an
+in-line string to display an abort message. Compiled by the word
+"abort"".
+.TP
+.B
+code (does>) ( -- ) compilation
+Performs the run-time action of returning from the current colon
+definition and setting the code type of the last defined entry
+to be the code following "(does>)" thus giving it the right run-time
+action. Compiled by the word "does>".
+.TP
+.B 
+code (branch) ( -- ) compilation
+Performs the run-time action of branching in threaded code. 
+Literal succeeding this word contains a relative address to 
+the next thread. Compiled by the words "else", "again", "endof"
+and "repeat".
+.TP
+.B 
+code (do) ( end start -- ) compilation
+Performs the run-time action of initializing for a loop block. 
+Moves the two parameters, "end" and "start", to the return stack
+and a pointer to the relative address literal succeeding this word
+so that "leave" may be performed in any section of the looped block.
+Compiled by the word "do".
+.TP
+.B
+code (literal) ( -- int) compilation
+Pushes the in-line constant following the threaded code onto
+the parameter stack. Compiled by the words "literal" and "[']".
+.TP
+.B 
+code (loop) ( -- ) compilation
+Performs the run-time action of incrementing the loop index and
+checking it against the upper limit for the loop. If the index
+is still within the loop limit a branch is performed back to the 
+beginning of the loop. The branch offset is stored in-line 
+directly after the "(loop)" thread. Compiled by the word "loop".
+.TP
+.B 
+code <mark ( -- marker) compilation
+Marks the current position in the compilation code stream as
+a position for backwards branch.
+.TP
+.B 
+code <resolve ( marker -- ) compilation
+Allocates space for and calculates a backward branch offset.
+.TP
+.B 
+code >mark ( -- marker) compilation
+Allocates space for a branch offset and marks it for forward
+resolving.
+.TP
+.B 
+code >resolve ( marker -- ) compilation
+Resolves a forward branch offset.
+.TP
+.B 
+vocabulary compiler ( -- )
+Vocabulary containing the compilation word set. Compiler 
+support, compiled words and threading primitives. Include into
+the vocabulary search set, "context", to allow access to these
+extensions.
+.TP
+.B 
+code thread ( entry -- )
+Used to create threaded code in the dictionary area. Allows code
+to be written without considering the threading principle.
+.TP
+.B 
+code unthread ( addr -- entry)
+Given a reference to threaded code returns an unthreaded entry
+pointer.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.SH EXAMPLES
+A simple definition of "if" and "then" with mode checking:
+.RS
+.LP
+.nf
+.B : if ( flag -- ) 
+.B 	compile (?branch) >mark 
+.B ; compilation immediate
+.LP
+.B : then ( -- )
+.B 	<resolve 
+.B ; compilation immediate
+.fi
+.RE
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode 
+of the entries are indicated together with their parameter stack effect.
+.SH WARNING
+Code written using this word set is not directly portable to
+other forth environments.
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

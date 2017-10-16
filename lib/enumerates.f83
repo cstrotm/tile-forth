@@ -1,0 +1,75 @@
+\
+\  ENUMERATE VARIABLES
+\
+\  Copyright (C) 1988-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 30 June 1988
+\
+\  Last updated on: 25 July 1990
+\
+\  Dependencies:
+\       (forth) forth
+\
+\  Description:
+\       Forth level definition of enumerate types and variables.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Enumerates definitions...) cr
+
+vocabulary enumerates ( -- )
+
+enumerates definitions 
+
+: enum.type ( -- enum.type enum0)  
+  create here 0 , 0
+does> ( enum.type -- )
+  drop variable
+;
+
+: enum ( enum1 -- enum2)  
+  create dup , 1+
+does> ( addr -- enum)
+  @
+;
+
+: enum.end ( enum.type enum3 -- )  
+  drop last swap ! 
+;
+
+: (>enum) ( enum enum.type -- )
+  dup >r >body @
+  begin
+    2dup >body @ =
+    if swap r> 2drop exit then
+    @ r@ over =
+  until
+  2drop r> drop false
+; private
+
+: >enum ( enum -- entry)
+  ' [compile] literal ?compile (>enum)
+; immediate
+
+forth only

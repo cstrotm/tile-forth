@@ -1,0 +1,323 @@
+\
+\  MULTI-TASKING DEFINITIONS
+\
+\  Copyright (C) 1988-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 30 June 1988
+\
+\  Last updated on: 4 September 1990
+\
+\  Dependencies:
+\       (forth) forth, enumerates, structures, blocks, queues
+\
+\  Description:
+\       Allows definition of tasks, condition queues, semaphores, channels,
+\       and rendezvous. Follows the basic models of concurrent programming
+\       primitives. 
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Multi-tasking definitions...) cr
+
+#include enumerates.f83
+#include structures.f83
+#include blocks.f83
+#include queues.f83
+
+blocks queues structures multi-tasking definitions
+
+( Task structure and status codes)
+
+struct.type TASK-HEADER ( -- )
+  struct QUEUE +queue ( task -- addr) private
+  enum +status ( task -- addr) private
+  ptr  +sp ( task -- addr) private
+  ptr  +s0 ( task -- addr) private
+  ptr  +ip ( task -- addr) private
+  ptr  +rp ( task -- addr) private
+  ptr  +r0 ( task -- addr) private
+  ptr  +fp ( task -- addr) private
+  ptr  +ep ( task -- addr) private
+struct.end
+
+enumerates
+
+enum.type TASK-STATUS-CODES ( -- )
+  enum TERMINATED ( -- enum)		( Terminated status code)
+  enum READY ( -- enum)			( Ready for "schedule")
+  enum RUNNING ( -- enum)		( Scheduled and running)
+  enum IOWAITING ( -- enum)		( Waiting for in- or output)
+  enum WAITING ( -- enum)		( Generic waiting)
+  enum DELAYED ( -- enum)		( In delay function call)
+enum.end
+  
+multi-tasking
+
+( Task inquiry and manipulation functions)
+
+: .task ( task -- )
+  dup foreground @ =			( Check for foreground task)
+  if ." foreground#" else ." task#" then
+  dup . cr				( Print task fields)
+  ." queue: " dup +queue .queue cr	( The task queue pointers)
+  ." status: "dup +status @ . cr	( The task status field)
+  ." sp: " dup +sp @ . cr		( The task stack pointer)
+  ." s0: " dup +s0 @ . cr		( The task stack bottom pointer)
+  ." ip: " dup +ip @ . cr		( The task instruction pointer)
+  ." rp: " dup +rp @ . cr		( The task return stack pointer)
+  ." r0: " dup +r0 @ . cr		( The task return stack bottom pointer)
+  ." fp: " dup +fp @ . cr		( The task argument frame pointer)
+  ." ep: " +ep @ .			( The task exception frame pointer)
+;
+
+: deactivate ( queue task -- ) 
+  WAITING over +status !		( Mark as waiting)
+  running @ succ >r			( Access the next runnable task)
+  dup dequeue				( Remove this task from the queue)
+  swap enqueue				( And insert into queue of waiting)
+  r> resume				( The next task)
+;					
+
+: activate ( task -- ) 
+  RUNNING over +status !		( Restore running state)
+  running @ succ enqueue		( And insert it after the current task)
+  detach 				( And restart it)
+;
+
+: delay ( n -- )
+  DELAYED running @ +status !		( Indicate that the task is delayed)
+  0 do detach loop 			( Delay a task a number of switches)
+  RUNNING running @ +status ! 		( Restore running state)
+;
+
+: join ( task -- ) 
+  WAITING running @ +status !		( Indicate that the task is waiting)
+  begin					( Wait for task to terminate)
+    dup +status @ 			( Check status. While not zero)
+  while					( and thus not terminate)
+    detach				( Switch tasks)
+  repeat drop				( Drop task parameter)
+  RUNNING running @ +status ! 		( Restore running state)
+;
+
+: who ( -- ) 
+  ." task#: " running @			( Print header and list of tasks)
+  block[ ( task -- ) . ]; map-queue
+;
+
+( Condition Queue Variables)
+
+struct.type CONDITION ( -- )
+  struct QUEUE +waiting ( condition -- addr) private
+struct.init ( condition -- )
+  +waiting as QUEUE initiate		( Initiate condition queue)
+struct.end
+
+: await ( condition -- )
+  +waiting running @ deactivate 	( Deactivate the current task)
+;
+
+: cause ( condition -- )
+  +waiting dup ?empty-queue		( Check for empty queue)
+  if drop				( Drop and return)
+  else					( Else activate the first waiting)
+    +waiting succ dup dequeue activate	( task in the condition queue)
+  then
+;
+
+( Dijkstra's Semaphore definition)
+
+struct.type SEMAPHORE ( n -- )
+  struct CONDITION +not.zero ( semaphore -- addr) private
+  long +count ( semaphore -- addr) private
+struct.init ( n semaphore -- )
+  dup +not.zero as CONDITION initiate	( Initiate semaphore condition)
+  +count !				( Initiate semaphore counter)
+struct.end
+
+: mutex ( -- )
+  1 SEMAPHORE 				( Mutual exclusion semaphore)
+;
+
+: signal ( semaphore -- ) 
+  dup +not.zero +waiting ?empty-queue	( Check if the waiting queue is empty)
+  if 1 swap +count +! 			( Increment counter)
+  else
+    +not.zero cause			( Cause not zero condition)
+  then
+;
+
+: ?wait ( semaphore -- bool) 
+  +count @ 0= 				( Check if a wait will delay the task)
+;
+
+: wait ( semaphore -- ) 
+  dup ?wait				( Does the task have to wait)
+  if +not.zero await			( Await not zero counter)
+  else
+    -1 swap +count +!			( Decrement the counter)
+  then
+;
+
+( Extension of Hoare's Channels)
+
+enum.type COMMUNICATION-MODES ( -- )
+  enum ONE-TO-ONE ( -- enum)		( Task to task communication)
+  enum ONE-TO-MANY ( -- enum)		( One task to several tasks)
+  enum MANY-TO-ONE ( -- enum)		( Several task to one task)
+enum.end
+
+struct.type CHAN ( mode -- )
+  long +data ( chan -- addr) private
+  long +mode ( chan -- addr) private
+  struct SEMAPHORE +sent ( chan -- addr) private
+  struct SEMAPHORE +received ( chan -- addr) private
+struct.init ( mode chan -- )
+  tuck +mode !				( Set up channel mode)
+  0 over +sent as SEMAPHORE initiate	( Initiate semaphore fields)
+  0 swap +received as SEMAPHORE initiate ( as synchronize semaphores)
+struct.end
+
+: ?avail ( chan -- bool) 
+  dup +mode @ MANY-TO-ONE =		( Check channel mode)
+  if +received ?wait not		( Check if receiver is available)
+  else +sent ?wait not then 		( Check if sender is available)
+;
+
+: send ( data chan -- ) 
+  dup +mode @ MANY-TO-ONE =		( Check mode first)
+  if dup +received wait			( Wait for a receiver)
+    tuck +data !			( Assign data field)
+    +sent signal			( And signal the receiver)
+  else
+    tuck +data ! 			( Assign data field of channel)
+    dup +sent signal 			( Signal that data is available)
+    +received wait 			( And wait for receiver to fetch)
+  then
+;
+
+: receive ( chan -- data)  
+  dup +mode @ MANY-TO-ONE =		( Check mode first)
+  if dup +received signal		( Signal a receiver is ready)
+    dup +sent wait			( Wait for sender)
+    +data @				( Fetch sent data from channel)
+  else
+    dup +sent wait 			( Wait for sender to send data)
+    dup +data @ 			( Fetch data from channel)
+    swap +received signal		( And acknowledge to sender)
+  then
+;
+     
+( Message passing; rendezvous)
+
+struct.type RENDEZVOUS ( -- )
+  struct CHAN +arg ( rendezvous -- addr) private
+  struct CHAN +res ( rendezvous -- addr) private
+struct.init ( rendezvous -- )
+  ONE-TO-ONE over +arg as CHAN initiate	( Initiate argument channel)
+  ONE-TO-ONE swap +res as CHAN initiate	( Initiate result channel)
+struct.does ( arg rendezvous -- res)
+  tuck +arg send			( Send the argument)
+  +res receive				( and receive the result)
+struct.end
+
+: accept ( -- rendezvous arg)
+  ' >body [compile] literal		( Access the rendezvous structure)
+  ?compile dup				( Receive the argument to this task)
+  ?compile receive
+; immediate
+
+: accept.end ( rendezvous res -- )
+  ?compile swap				( Send the result to the sender)
+  ?compile +res
+  ?compile send
+; immediate
+
+: ?awaiting ( -- bool)
+  ' >body [compile] literal		( Access the rendezvous structure)
+  ?compile ?avail
+; immediate
+
+( High Level Task definition with user variables)
+
+forward make-task ( task.type -- task)
+
+struct.type task.type ( parameters returns -- )
+  long +users ( task.type -- addr) private
+  long +parameters ( task.type -- addr) private
+  long +returns ( task.type -- addr) private
+  ptr  +body ( task.type -- addr) private
+struct.init ( parameters returns task.type -- entry task.type users0)
+  dup >r +returns ! 			( Assign given fields)
+  r@ +parameters ! 			( And prepare for definition of)
+  last r> sizeof TASK-HEADER		( user variable fields for tasks)
+struct.does ( task -- )
+  make-task dup schedule constant	( Make a task, start it)
+struct.end				( And give it a name)
+
+: make-task ( task.type -- task)
+  dup >r +users @ 			( Fetch task size parameters)
+  r@ +parameters @ 			( And pointer to task body)
+  r@ +returns @ 			( And create a task instance)
+  r> +body @ task
+;
+
+: new-task ( -- task)
+  [compile] as				( Requires symbol after to be a task)
+  ?compile make-task 			( type. Makes a task instance and)
+  ?compile dup				( schedules it. Return pointer to)
+  ?compile schedule
+; immediate
+
+: bytes ( users1 size -- users2)  
+  over user + 				( Create a user variable and update)
+;
+
+: task.field ( size -- )
+  create , 				( Save size of user variable type)
+does> @ bytes				( Fetch size and create field name)
+; private
+
+: struct ( -- )
+  [compile] sizeof bytes		( Fetch size of structure and create)
+;
+
+1 task.field byte ( -- )
+2 task.field word ( -- )
+4 task.field long ( -- )
+4 task.field ptr ( -- )
+4 task.field enum ( -- )
+
+: task.body ( task.type users3 -- ) 
+  align sizeof TASK-HEADER - over +users ! ( Align and assign user area size)
+  here swap +body !  			( Assign pointer to task body code)
+  ] 					( And start compiling)
+;
+
+: task.end ( entry -- )
+  restore				( Remove local symbols for task type)
+  [compile] ;				( Stop compiling)
+; immediate compilation
+
+forth only

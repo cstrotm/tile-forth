@@ -1,0 +1,179 @@
+.TH LOCALS 3X "August 1, 1990"
+.SH NAME
+locals \- tile kernel argument binding and local variable functions
+.SH SYNOPSIS
+.B locals
+.SH DESCRIPTION
+The
+.IR tile
+kernel support for argument binding and local variables in
+colon definitions. The 
+.IR tile
+forth virtual machine model support building and disposing of 
+argument frames. The frame is build directly on the parameter
+stack. This minimizes the amount of data that has to be moved.
+Arguments and local variables are accessed by a frame pointer.
+The frame pointer is automatically maintained by the virtual
+machine. On the exit of a colon definition using "locals" the
+frame is disposed and return values moved to their correct
+position on the parameter stack. Other forth implementation
+build the frame on a separate stack or on the return stack.
+This implementation is much more efficient when the number of
+return values is often less than the number of arguments and
+local variables.
+.TP
+.B
+code -> ( x -- ) compilation
+Assigns an argument or local variable with the value "x". 
+Used in the
+following form:
+.br
+.I <value> 
+.B -> 
+.I <frame-variable>
+.br
+The word after the assignment operator must be a 
+.I <frame-variable> 
+otherwise an error is accounted. The compiler does not check 
+this error situation.
+.TP
+.B
+code exit ( -- ) compilation
+Performs the equivalent action of the normal "exit" but also
+restores the stack after argument binding and local variables.
+.TP
+.B
+vocabulary locals ( -- )
+Vocabulary containing the argument binding and local variable 
+extension. Include into the vocabulary search structure, "context",
+to allow access to these extensions.
+.TP
+.B
+code { ( -- ) immediate compilation
+Starts the named argument and local variable compiler. Used
+in the following forms:
+.br 
+.B { 
+.I <argument-names> 
+.B | 
+.I <local-names> 
+.B -- 
+.I <any> 
+.B }
+.br
+or 
+.br 
+.B { 
+.I <argument-names> 
+.B -- 
+.I <any> 
+.B }
+.br
+or 
+.br 
+.B { 
+.B | 
+.I <local-names> 
+.B -- 
+.I <any> 
+.B }
+.br
+The different parts are as shown optional. The only restriction is
+that the definition of argument and local variable names is terminated
+by "}" or "--". In the "--" case characters until "}" are skipped and
+may be regarded as a comment. Return values are not named.
+.SH INTERNALS
+The following set of functions are mainly used to implement the
+argument binding and local variable frame management.
+.TP
+.B
+code (link) ( arguments -- frame old-frame-pointer) compilation
+Compiled by "{" to perform the run-time action of building
+the argument and local variable frame. The frame is built directly 
+on the parameter stack to minimize data movement. The frame consists
+of the arguments and stack area for the local variables. The
+old frame pointer is stored on the top of the parameter stack, 
+making lexical levels possible. A pointer to the top of the
+frame, i.e., the parameter stack top, is saved on the return
+stack so that return values may be moved down to their correct
+position on the parameter stack and the old frame pointer 
+restored. The frame pointer will point to the first element
+below the first argument. This element will become the top of
+stack if no values are returned. 
+.TP
+.B
+code (local) ( -- addr) compilation
+Returns the address of an argument or local variable within the
+current frame using an inline literal offset. To access
+the address of the first variable in the frame the offset
+should be one.
+.TP
+.B
+code (local!) ( value -- ) compilation
+Stores "value" to an argument or local variable within the
+current argument frame using an inline literal offset. To assign
+the first variable in the frame the offset should be one.
+.TP
+.B
+code (local@) ( -- value) compilation
+Access the value of an argument or local variable within the 
+current argument frame using an inline literal offset. To access
+the value of the first variable in the frame the offset should be
+one.
+.TP
+.B
+code (unlink) ( frame return -- return) compilation
+Drops the frame and move the return values down. The old
+frame pointer is restored.
+.TP
+.B
+code (unlink;) ( frame return -- return) compilation
+Drops the frame and move the return values down. The old
+frame pointer is restored. Leaves the colon definition. 
+Compiled by the word ";".
+.TP
+.B
+code (unlink>) ( frame return -- return) compilation
+Drops the frame and move the return values down. The old
+frame pointer is restored. Assigns the "code" type of the
+latest definition and leaves the colon definition. 
+Compiled by the word "does>".
+.\" .SH INTERNALS
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode 
+of the entry is indicated together with the parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

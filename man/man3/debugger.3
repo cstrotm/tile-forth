@@ -1,0 +1,280 @@
+.TH DEBUGGER 3X "August 6, 1990"
+.SH NAME
+debugger \- forth level debugger
+.SH SYNOPSIS
+.B "#include debugger.f83"
+.LP
+.B "debugger"
+.SH DESCRIPTION
+The
+.IR tile
+forth debugger package. Allows basic black-box tracing of
+colon definitions, break on function call and profiling of function
+calls. The debugger is built on a general advice package so that
+it may easily be extended with addition debugging functions. The
+advice concept is a function may be asked for advice on how to handle
+a colon definition. The trace advice function wraps the function 
+call in printing of the stack status and the name of the function.
+.TP
+.B
+: *abort* ( -- )
+Abort command in a break point. Will abort the break point interpreter
+command loop and clear the stacks. Should only be used in a break point.
+.TP
+.B
+: *call* ( -- )
+Calls the broken function in a break point. Will not return to the break
+point interpreter. The program will continue. Should only be used in
+a break point.
+.TP
+.B
+: *execute* ( -- )
+Executes the broken funtion in a break point. Will return to the break
+point interpreter so that the program stack may be investaged. Should 
+only be used in a break point.
+.TP
+.B
+: *profile* ( -- )
+Displays the profile information for a broken function. Should only be
+used in a break point.
+.TP
+.B
+: *return* ( -- )
+Returns from a break point. The break point interpreter is left.
+.TP
+.B
+: .profile ( -- )
+Scans through the definitions vocabulary, "current", and prints the
+available profile information for advice functions. Displays the number
+of calls and the name of the functions.
+.TP
+.B
+: .s ( -- )
+Displays the current parameter stack contents in the format:
+.br
+.B "[ <depth> ] <bottom> \e ... \e <top>"
+.br
+Only the top five elements of the stack are displayed. If more
+than five elements are available is this indicated by the depth
+and the prefix "\...".
+.TP
+.B
+: : ( -- )
+Redefinition of "colon" to allow easy debugging of "any" code
+definitions without rewriting.
+.TP
+.B
+: ?advice ( entry -- bool)
+Used in the following form:
+.br
+.B '
+.I <entry>
+.B ?advice
+.br
+Verifies that the entry passed as a parameter is an advice 
+function.
+.TP
+.B
+: advice ( action -- )
+Used in the following form:
+.br
+.B ' 
+.I <advice-action> 
+.B advice 
+.I <advice-colon-definition>
+.br
+Makes the parameter "action" the advice action for an advice
+colon definition. The colon definition is verified before
+the assignment is performed. The advice action should be
+a function which receives an advice block and performs some
+action on it. Resets the profile information.
+.TP
+.B
+: break ( -- )
+Used in the following form:
+.br
+.B break
+.I <advice-colon-definition>
+.br
+to make an advice colon definition a function with a break point.
+An error message is given if the succeeding symbol is not of 
+correct type. When the <advice-colon-definition> is called a 
+break command loop is entered. A new interpreter top loop is
+entered. This top loop will accept any forth statement. The
+commands "*abort*", "*call*", "*execute*", "*profile*" and
+"*return*" should be used to control the execution of the 
+broken definition. The word "*abort" will abort execution,
+enpty the stacks and return to the normal "interpret" top loop.
+The word "*call*" may be used to evoke the broken definition and
+continue execution. The definition will not return to the
+break point interpreter. The command "*execute*" performs the 
+same operation but returns to the break point interpreter so
+that the return value and program state may be checked before
+continuing. The word "*profile*" displays the profile information
+for the broken definition and last, the word "*return*" will leave
+the break point.
+.TP
+.B
+: colon ( -- )
+Used in the following form:
+.br
+.B colon
+.I <advice-colon-definition>
+.br
+To make an advice colon definition a "normal" function again.
+An error message is given if the entry is not of correct type.
+.TP
+.B
+vocabulary debugger ( -- )
+Vocabulary containing the debugger definitions. Include into the
+vocabulary search set, "context", to allow access to the debugger.
+This vocabulary should come before "forth" in the set.
+.TP
+.B
+: tail-recurse ( -- ) compilation immediate
+Redefinition of the tail recursion compilation word to make it
+work correctly in this context.
+.TP
+.B
+: trace ( -- )
+Used in the following form:
+.br
+.B trace
+.I <advice-colon-definition>
+.br
+To make an advice colon definition a traced function. An
+error message is given if the succeeding symbol is not of 
+correct type. When the <advice-colon-definition> is later called
+the advice function with display the name of the definition together
+with the stack status for both the enter and exit of the call.
+Profile information is also collected.
+.SH INTERNALS
+Private definitions in the 
+.I debugger
+vocabulary;
+.TP
+.B
+ptr +advice ( advice -- addr) private
+Access field to advice function which is called to handle the
+code block. The advice function is call with execute thus it
+is a pointer to an entry. Three predefined advice functions
+are available for profiling, tracing and break points.
+.TP
+.B
+ptr +block ( advice -- addr) private
+Access field to code block of advice colon definition. Stored
+as a pointer to threaded code.
+.TP
+.B
+ptr +entry ( advice -- addr) private
+Access field to entry with advice block. Allows access of entry
+fields such as name, link, etc. Stored as a pointer to an entry.
+.TP
+.B
+long +profile ( advice -- addr) private
+Access field to counter for number of function calls. Basic
+profiling information. Updated by the advice primitives.
+.TP
+.B
+struct.type ADVICE ( -- ) private
+The advice structure type. Allows general handling of execution
+of code definitions. The structure type contains the following
+private fields; "+advice", "+block", and "+profile".
+.TP
+.B
+: [advice] ( advice -- ) private
+Management function to allow interception of function call and
+calling of advice function.
+.TP
+.B
+: [break] ( advice -- ) private
+Primitive advice function which allows a interpreter top loop
+similar to "interpret", the forth top loop. In this top loop
+the commands "*abort*", "*call*", "*execute*", "*profile*" and
+"*return*" should be used to control the execution of the 
+advice definition.
+.TP
+.B
+: [colon] ( advice -- ) private
+Primitive advice function call for normal function call and
+increment of profiling counter.
+.TP
+.B
+: [trace] ( advice -- ) private
+Primitive advice function for black-box tracing of function
+calls. The entry and exit of the function call are printed
+together with the name of the function and the status of the
+stack.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR compiler(3X),
+.IR structures(3X),
+.IR blocks(3X).
+.SH EXAMPLES
+An example showing how to trace and profile a function:
+.RS
+.LP
+.nf
+.B 
+#include debugger.f83
+.LP
+.B 
+forth definitions debugger 
+.LP
+.B
+: fac ( n -- n!)
+.B 
+	dup 0> 
+.B
+	if dup 1- recurse * 
+.B
+	else drop 1 then 
+.B
+;
+.LP
+.B 
+trace fac 
+.B
+5 fac . 
+.B ".profile"
+.fi
+.RE
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.SH WARNING
+The debugger package will not work correctly on functions which
+manipulate the return stack. An advice colon definition must always
+return to the advice function.
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

@@ -1,0 +1,30 @@
+#! /bin/sh
+# NAME
+#	forthtool - tile forth interaction tool in sunview
+# SYNOPSIS
+#	forthtool [<parameter>...]
+# DESCRIPTION
+#	Starts forth in a cmdtool window with TILE Forth icon when closed.
+#	Allows cmdtool editing and session file saving. Any parameters
+#	are passed on to forth. 
+# OPTIONS
+#	none
+# FILES
+#	.forthicon	icon for closed forthtool
+# SEE ALSO
+#	tile(1), cmdtool(1), sunview(1)
+# AUTHOR
+#	Mikael R.K. Patel
+#	Computer Aided Design Laboratory (CADLAB)
+#	Department of Computer and Information Science
+#	Linkoping University
+#	S-581 83 LINKOPING
+#	SWEDEN
+#	Email: mip@ida.liu.se
+# HISTORY
+# 	Created on: 	01 April 1989
+#	Lasted updated:	23 May 1990
+
+cmdtool -Wl "forthtool - forth" -WL Forth -WI $TILE/bin/forthicon forth $1 $2 $3 $4 $5 $6 $7 $8 $9
+
+

@@ -1,0 +1,239 @@
+.TH BITSETS 3X "August 1, 1990"
+.SH NAME
+bitsets \- bit vector represented sets definitions
+.SH SYNOPSIS
+.B "#include bitsets.f83"
+.LP
+.B bitsets
+.SH DESCRIPTION
+Allows definition and manipulation of bit vector represented sets. A
+set may contain maximum of 32 items as it is maintained as a stack
+item. All set operations are performed as logic functions; 
+"and", "or", etc. This gives rapid manipulation of small sets.
+Most set operations require only one logic operation.
+.TP
+.B
+: .bitset ( bitset -- ) immediate
+Used in the following form:
+.br
+.I <bitset>
+.B .bitset
+.I <bitset-type-name>
+.br
+to display the bitset values in the following normal set notation:
+.br
+.B {
+.I <entries> 
+.B }
+.br
+The bitset type is required to map the items back to their corresponding
+entries. It maintains the list of items defined in the universe set.
+.TP
+.B
+: >item ( item -- entry) immediate
+Used in the following form:
+.br
+.I <item>
+.B >item
+.I <bitset-type-name>
+.B ( item -- entry)
+.br
+to map an item value back to the corresponding entry given the bitset
+type name. The bitset type maintains the list of items defined in the
+universe set.
+.TP
+.B
+: ?empty-bitset ( bitset -- bool) macro
+Returns "true" if the bitset is an empty set else "false".
+.TP
+.B
+: ?map-bitset ( bitset block[ item -- bool] -- )
+Conditional iterator on a bitset. The block is called for each item
+in the set while the block returns "false". Should the block return
+"true" the iterator is terminated.
+.TP
+.B
+: ?member-bitset ( item bitset -- bool) macro
+Returns "true" if the item is a member of the bitset else "false".
+.TP
+.B
+: append-bitset ( item bitset1 -- bitset2) macro
+Returns the result of appending the item to the bitset.
+.TP
+.B
+: bitset.end ( -- )  
+Used in the following form:
+.br
+.B bitset.type
+.I <bitset-type-name>
+.B ( -- )
+.br
+.I {
+.B item
+.I <bitset-item-name>
+.B ( -- item)
+.I }
+.br
+.B bitset.end
+.br
+to terminate a bitset type definition. The bitset should not contain
+more than 32 items as a set value is represented by a 32-bit integer
+number (on stack).
+.TP
+.B
+: bitset.type ( -- ) 
+Used in the following form:
+.br
+.B bitset.type
+.I <bitset-type-name>
+.B ( -- )
+.br
+.I {
+.B item
+.I <bitset-item-name>
+.B ( -- item)
+.I }
+.br
+.B bitset.end
+.br
+to initiate the definition of a bitset type. The bitset may contain at
+most 32 items as a set value is represented as a 32-bit integer on
+stack and in memory. The bitset type may be used in the following form:
+.br
+.B <bitset-type-name>
+.I <bitset-variable-name>
+.B ( -- addr)
+.br
+to create a bitset variable (and which acts as a normal "variable").
+.TP
+.B
+vocabulary bitsets ( -- )
+The bitset extension vocabulary. Include into the vocabulary search
+structure, "context", to allow access to this library.
+.TP
+.B
+: difference-bitset ( bitset1 bitset2 -- bitset3) macro
+Returns the resulting "bitset3" after removing "bitset2" from "bitset1".
+.TP
+.B
+constant empty-bitset ( -- bitset)
+Returns the empty bitset. For a bit vector representation of sets 
+the empty set the value is zero.
+.TP
+.B
+: intersection-bitset ( bitset1 bitset2 -- bitset3) macro
+Returns the intersection, "bitset3", between the sets "bitset2" and "bitset1".
+.TP
+.B
+: item ( -- )  
+Used in the following form:
+.br
+.B bitset.type
+.I <bitset-type-name>
+.B ( -- )
+.br
+.I {
+.B item
+.I <bitset-item-name>
+.B ( -- item)
+.I }
+.br
+.B bitset.end
+.br
+to create a bitset item. When the item is used it will return the item
+value on the parameter stack. A bitset may contain at most 32 items as
+each item corresponds to an unique bit in a 32-bit integer stack element.
+.TP
+.B
+: map-bitset ( bitset block[ item -- ] -- )
+Bitset iterator function. The code block is called on each item in
+the bitset. The code block may be created with the extension library
+"blocks". The block will receive the item as parameter.
+.TP
+.B
+: remove-bitset ( item bitset1 -- bitset2) macro
+Returns the resulting bitset after removing the item from the bitset.
+.TP
+.B
+: size-bitset ( bitset -- num)
+Returns the size of the bitset, i.e., the number of items in the set.
+.TP
+.B
+: union-bitset ( bitset1 bitset2 -- bitset3) macro
+Returns the union, "bitset3", between the sets "bitset2" and "bitset1".
+.TP
+.B
+: { ( -- ) immediate
+Used in the following form:
+.br
+.B {
+.I <items>
+.B } ( -- bitset)
+.br
+to start the definition of a bitset. The brackets should only contain
+item entries.
+.TP
+.B
+: } ( -- bitset)
+Used in the following form:
+.br
+.B {
+.I <items>
+.B } ( -- bitset)
+.br
+to end a bitset definition. The brackets should only contain item entries.
+.SH INTERNALS
+Private definitions in the 
+.I bitsets
+vocabulary;
+.TP
+.B
+: (.bitset) ( bitset bitset.type -- ) private
+Performs the run-time action of displaying the bitset given the mapping
+set of entries. Compiled by the word ".bitset".
+.TP
+.B
+: (>item) ( item bitset.type -- entry) private
+Performs the run-time action of locating an item entry given its bitset
+value. Returns the "entry" pointer or "nil" if not found. Compiled by
+the word ">item".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR macros(3X),
+.IR blocks(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the
+entry is indicated together with the parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

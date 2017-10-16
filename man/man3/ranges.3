@@ -1,0 +1,180 @@
+.TH RANGES 3X "August 6, 1990"
+.SH NAME
+ranges \- integer range functions library
+.SH SYNOPSIS
+.B "#include ranges.f83"
+.LP
+.B "ranges"
+.SH DESCRIPTION
+The
+.IR tile
+forth integer range library. Allows definition and manipulation of
+ranges of integers. Defines a recognition function so that standard
+range notation may be used, i.e., [<from>..<to>], where <from> and
+<to> are integer values.
+.TP
+.B
+struct.type RANGE ( from to -- )
+The range defined as a structure type thus structure operations
+are allowed (e.g. sizeof) and access of the interval range numbers.
+May be used to create range variables or fields in "structures".
+The "RANGE" variable may be accessed using the double number
+memory access functions; "2@", and "2!". The structure type contains
+two private fields, "+from" and "+to". 
+.TP
+.B
+: range ( from to -- )
+Used in the following form to create a range constant:
+.br
+.I <from> <to>
+.B range 
+.I <range-name>
+.B ( -- from to)
+.br
+When the range constant is used it will produce the values.
+Any double variable may used as an integer range if the values are
+in the right order, "from".."to", and may be accessed and manipulated
+with the double number stack and memory access functions.
+.TP
+.B
+vocabulary ranges ( -- )
+Integer range extensions vocabulary. Include into the vocabulary
+search structure, "context", to allow access to these extensions.
+.TP
+.B
+: ?intersection-range ( from1 to1 from2 to2 -- bool)
+Returns "true" if there exists an intersection range between
+the two ranges defined by "from1".."to1" and "from2".."to2"
+else "false".
+.TP
+.B
+: ?map-range ( from to block[index -- bool] -- )
+Used in the following form:
+.br
+.I <range> 
+.I <conditional-block> 
+.B ?map
+.br
+Conditional map function on a range. The block is called for
+each value of the range starting with "from" and ending with "to"
+until the block returns "true". The block receives the index as a
+parameter and should return a boolean value.
+.TP
+.B
+: ?member-range ( x from to -- bool)
+Returns "true" if the value is within the range defined by
+"from" and "to" else "false".
+.TP
+.B
+: ?range ( str -- [from to true] or [str false]) recognizer
+The integer range recognition function. Is called automatically
+by "interpret" when a literal is encountered and the "ranges"
+vocabulary is member of the search chain. The recognizer
+function will return "true" if the parameter string is of
+the format:
+.B [
+.I <from>
+.B ..
+.I <to>
+.B ]
+and the relationship between the numbers is correct, i.e., 
+.I <to> 
+is greater or equal to
+.I <from>.
+.TP
+.B
+: intersection-range ( from1 to1 from2 to2 -- from3 to3)
+Given two ranges defined by "from1".."to1" and "from2".."to2"
+returns their intersection. This function does not check if
+an intersection exists. This may be done with the word 
+"?intersection-range".
+.TP
+.B
+: map-range ( from to block[index -- ] -- )
+Used in the following form:
+.br
+.I <range> 
+.I <block> 
+.B map-range
+.br
+Map function on a range defined by "from" and "to". The block is
+called for each value of the range starting with "from" and ending
+with "to". The block receives the index as a parameter.
+.TP
+.B
+: size-range ( from to -- num)
+Returns the size of the range by calculating "to" - "from" + 1.
+.SH INTERNALS
+Private definitions in the 
+.I ranges
+vocabulary;
+.TP
+.B
+long +from ( range -- addr) private
+Returns address to "from" value of a "RANGE" structure. 
+.TP
+.B
+long +to ( range -- addr) private
+Returns address to "to" value of a "RANGE" structure. 
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR structures(3X),
+.IR blocks(3X).
+.SH EXAMPLES
+An example showing how to used the integer ranges extensions:
+.RS
+.LP
+.nf
+.B
+#include blocks.f83
+.B 
+#include ranges.f83
+.LP
+.B 
+blocks ranges
+.LP
+.B 
+[0..15] range small-numbers
+.B 
+small-number block[ ( index -- ) . ]; map-range cr
+.LP
+.B
+10 [-128..127] ?member-range . cr
+.fi
+.RE
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

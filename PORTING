@@ -1,0 +1,250 @@
+THREADED INTERPRETIVE LANGUAGE ENVIRONMENT (TILE) PORTING 
+
+RELEASE 2.1
+
+August 20, 1990
+
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+
+
+INTRODUCTION
+
+This brief document describes some to the sections in the tile forth
+kernel which may have to be changed to port the code to other machines.
+Any changes made should be made in a "#ifdef" section and reported back to
+the author in "diff" format.
+
+
+1. KERNEL DEFINITIONS
+
+1.1	Vocabulary listing parameters (File: kernel.c)
+
+The column and line width used by "words" may be altered by changing
+the lines:
+
+#define COLUMNWIDTH 15
+#define LINEWIDTH 75
+
+
+1.2	Set of search vocabularies (File: kernel.c)
+
+The set of search vocabularies, "context", is realized as a vector
+of vocabulary pointers. The maximum number of vocabularies in the set
+is defined by:
+
+#define CONTEXTSIZE 64
+
+An error will occur it the set is exhausted. This limit is not checked
+by the kernel.
+
+
+1.3	Lookup cache (File: kernel.c)
+
+The vocabulary entry lookup function in the kernel is supported by a
+simple cache. A hash function (see below) is used to map a string into 
+the cache and there, if possible, find the entry. The size of the cache
+is given by:
+
+#define CACHESIZE 256
+#define hash(s) ((s[0] + (s[1] << 4)) & (CACHESIZE - 1))
+
+The hash function is tailored for the current cache size and thus
+special care must be taken when altering these definitions.
+
+
+1.4	Internal structures (File: kernel.c)
+
+The "pad" and the "tib" may be changed by altering:
+
+#define PADSIZE 84
+#define TIBSIZE 256
+
+
+1.5	Word alignment (File: kernel.h)
+
+Alignment of threaded code and data structures are performed by the
+macro:
+
+#define align(p) p = (PTR32) ((INT32) ((PTR8) p + 3) & -4)
+
+This macro currently aligns to word (long) boundaries and is used by
+"colon" and "create".
+
+
+1.6	Typing system (File: kernel.h)
+
+The kernel is written in its own typing system. The typing system may
+be extended to allow other data types etc. All data types in the kernel
+are written with uppercase words.
+
+#define VOID void
+
+typedef char*  PTR8;
+typedef short* PTR16;
+typedef long*  PTR32;
+
+typedef VOID (*SUBR)();
+
+#define NIL 0
+
+typedef long BOOL;
+
+#define TRUE  ((BOOL) -1)
+#define FALSE ((BOOL)  0)
+
+typedef unsigned       NUM;
+typedef unsigned char  NUM8;
+typedef unsigned short NUM16;
+typedef unsigned long  NUM32;
+
+typedef int   INT;
+typedef char  INT8;
+typedef short INT16;
+typedef long  INT32;
+
+typedef float  FLOAT32;
+typedef double FLOAT64;
+
+typedef char  CHAR;
+typedef char* CSTR;
+typedef char* PSTR;
+
+typedef union {
+    BOOL             BOOL;
+    NUM32            NUM32;
+    INT32            INT32;
+    FLOAT32          FLOAT32;
+    CSTR             CSTR;
+    PTR8             PTR8;
+    PTR16            PTR16;
+    PTR32            PTR32;
+    SUBR             SUBR;
+    QUEUE            QUEUE;
+    TASK             TASK;
+    ENTRY            ENTRY;
+    CODE_ENTRY       CODE_ENTRY;
+    VOCABULARY_ENTRY VOCABULARY_ENTRY;
+} UNIV, *PTR;
+
+
+1.7	Initialization of the kernel (File: kernel.c)
+
+The initialization function for the kernel requires five parameters.
+The two first allows the application such as forth.c to extend the
+basic forth vocabulary by giving the first and last entry in the 
+application vocabulary. The three following parameters specify the
+size of the foreground task, the forth interpreter. See the file
+forth.c for an example.
+
+
+2. 	IO MANAGEMENT
+
+2.1	File and path name size (File: io.c)
+
+The maximum length of a file or path name is defined as:
+
+#define FILENAMESIZE 128
+#define PATHNAMESIZE 128
+
+These lengths are not test for currently. An error may occur if
+a file or path name is longer than the given sizes.
+
+
+2.2	File buffer stack (File: io.c)
+
+The io management package implements a stack of input file buffers to
+allow loading of files from within other files etc. The maximum depth
+of this stack is defined as:
+
+#define INFSTACKSIZE 32
+
+The depth should be chosen to the maximum number of open files allowed
+by the operating system.
+
+
+2.3	Set of loaded files (File: io.c)
+
+The file loading mechanism automatically looks if the file already
+has been opened. The set of opened files is maintained as a vector.
+The maximum number of loaded files is:
+
+#define INFILESSIZE 64
+
+The vector contains the fully expanded names of the loaded files.
+An error may occur if this limit is exceeded. It is not checked for
+currently.
+
+
+2.4	Set of paths (File: io.c)
+
+The io packages also maintains an ordered collection of paths which
+are used to expand file names with when search for the file. The
+maximum size of this collection is defined by:
+
+#define PATHSSIZE 32
+
+This collection is automatically appended by the environment variables
+$PWD, $HOME, and $TILEPATH when the io package is initiated.
+
+
+2.5	White space (File: io.h)
+
+The definition of "white" space is defined as:
+
+#define ISSPACE(c) ((c) <= ' ')
+
+This eliminates space and any control characters. Some application
+might want to redefine this. 
+
+
+2.6.	Directory separator character (File: io.h)
+
+The directory separator character is defined as:
+
+#define DIRSEPCHAR '/'
+
+This makes the code more portable to other machines.
+
+
+2.6	Non-blocking read operation (File: io.c)
+
+To achieve multi-tasking during input wait the input package function
+"io_fillbuf" uses a non-blocking read operation. Some environments
+do not support this. This may require re-implementation.
+
+
+3. 	ERROR MANAGEMENT
+
+3.1	Signals (File: error.c)
+
+Error handing is realized using two basic mechanisms; first signals from
+the execution environment and second, user defined exceptions in the kernel
+(forth level code).
+
+The signal message table and the appropriate operations, "error_restart",
+or "error_fatal", may have to be changed to give the right performance.
+
+Please see these functions and "error_initiate" where the actual binding
+of signals and actions is performed.
+
+
+4.	MEMORY MANAGEMENT
+
+4.1	Memory allocation (File: forth.c)
+
+Currently memory for the dictionary, strings, entries, and task blocks
+are allocated using "malloc".
+
+The size of the dictionary is determined when calling the initialization
+function, "memory_initiate", in the memory management package. The current
+default size is defined as:
+
+#define DICTIONARYSIZE 1024L * 1024L
+
+And may be too large for "small" machines. 

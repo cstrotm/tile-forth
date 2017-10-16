@@ -1,0 +1,205 @@
+\
+\  RELATION MANAGEMENT LIBRARY
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 8 August 1990
+\
+\  Last updated on: 20 August 1990
+\
+\  Dependencies:
+\       (forth) forth, structures, blocks
+\
+\  Description:
+\       Management of relations represented as association lists. Relations
+\       may be defined between items as a triple: (item X relation X value)
+\       Supports iteration over the item set, the relations of an item, and
+\       the relations and values of an item.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Relations definitions...) cr
+
+#include structures.f83
+#include blocks.f83
+
+vocabulary relations ( -- )
+
+blocks structures relations definitions
+
+\ Item creation, entry mapping and display function
+
+variable items ( -- addr) 
+
+nil items !
+
+struct.type ITEM ( entry -- )
+  ptr +next-item ( item -- addr) private
+  ptr +entry ( item -- addr) private
+  ptr +associations ( item -- addr) private
+struct.init ( entry item -- ) 
+  tuck +entry !
+  nil over +associations !
+  items @ over +next-item !
+  items !
+struct.end
+
+: new-item ( -- item)
+  nil new-struct ITEM
+;
+
+: item ( -- )
+  create last new-struct ITEM drop
+;
+
+: this-item ( -- item)
+  last >body
+;
+
+: item>entry ( item -- entry)
+  +entry @
+;
+
+: .item ( item -- )
+  dup item>entry ?dup if .name drop else ." item#" 0 .r then
+;
+
+\ Association creation, and search function
+
+struct.type ASSOCIATION ( value relatin next -- ) private
+  ptr +next-association ( association -- addr) private
+  ptr +relation ( association -- addr) private
+  ptr +value ( association -- addr) private
+struct.init ( value relation next association -- )
+  dup >r +next-association ! r@ +relation ! r> +value !
+struct.end
+
+: associate ( relation association -- addr)
+  ?dup
+  if 2dup +relation @ =
+    if nip +value
+    else +next-association @ tail-recurse then
+  else 
+    drop nil
+  then
+; private
+
+\ Relation access and assign functions
+
+: put-relation ( value relation item -- )
+  +associations 2dup @ associate ?dup
+  if >r 2drop r> !
+  else
+    dup >r +next-association @ new-struct ASSOCIATION r> !
+  then
+;
+
+: get-relation ( relation item -- value)
+  +associations @ associate @
+;
+
+: ?get-relation ( relation item -- [relation item false] or [value true])
+  2dup +associations @ associate dup if >r 2drop r> @ true then
+;
+
+: ?avail-relation ( relation item -- bool)
+  +associations @ associate boolean
+;
+
+: ?is-relation ( value relation item -- bool)
+  +associations @ associate ?dup if @ = else drop false then
+;
+
+: remove-relation ( relation item -- )
+  swap >r +associations
+  begin
+    dup +next-association @ ?dup
+  while
+    dup +relation @ r@ =
+    if +next-association @ swap +next-association !
+      r> drop exit
+    then
+    nip
+  repeat
+  drop
+;
+
+\ Item set iterators
+
+: map-items ( block[item -- ] -- )
+  >r items @
+  begin
+    ?dup
+  while
+    r@ over >r
+    call
+    r> +next-item @
+  repeat
+  r> drop
+;
+
+: map-relation ( relation block[value item -- ] -- )
+  >r items @
+  begin
+    ?dup
+  while
+    2dup ?get-relation 
+    if swap rot r@ swap >r over >r 
+      call
+      r> r> swap 
+    else
+      2drop
+    then
+    +next-item @
+  repeat
+  r> 2drop
+;
+
+: map-item ( item block[value relation -- ] -- )
+  >r +associations @
+  begin
+    ?dup
+  while
+    dup +value @ over +relation @ rot r@ swap >r
+    call
+    r> +next-association @
+  repeat
+  r> drop
+;
+  
+\ Item set display functions
+
+: .items ( -- )
+  ." items: " block[ .item space ]; map-items
+;
+
+: .relations ( item -- )
+  dup .item ." :relations: " block[ .item space drop ]; map-item
+;
+
+: .values ( item -- )
+  dup .item ." :values: " block[ .item ." : " . ]; map-item
+;
+
+forth only

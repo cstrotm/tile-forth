@@ -1,0 +1,381 @@
+THREADED INTERPRETIVE LANGUAGE ENVIRONMENT (TILE) FORTH
+
+RELEASE 2.1
+
+August 20, 1990
+
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+
+
+1.	INTRODUCTION
+
+TILE Forth is a 32-bit implementation of the Forth-83 Standard 
+written in C. Thus allowing it to be easily moved between different 
+computers compared to traditional Forth implementations in assembly.
+
+Most Forth implementations are done in assembly to be able to
+utilize the underlying architecture as optimal as possible. TILE 
+Forth goes another direction. The main idea behind TILE Forth is to 
+achieve a portable forth implementation for workstations and medium 
+size computer systems so that new groups of programmers may be exposed 
+to the flavor of an extensible language such as Forth. 
+
+The implementation of TILE Forth is selected so that, in principle, 
+any C-level procedure may become available on the interactive and
+incremental forth level. Other models of implementation of a threaded
+interpreter in C are possible but these are not as flexible.
+
+TILE Forth is organized as a set of modules to allow the kernel to be 
+used as a general threading engine for C. Environment dependencies such
+as memory allocation, error handling and input/output have been separated
+out of the kernel to increase flexibility. The forth application is "just"
+an example of how to use the kernel.
+
+Comparing forth implementations using the traditional benchmarks such as
+the classical sieves calculation is difficult because of the difference 
+in speed between workstations and personal computers. The Byte sieves
+benchmark is reported to typically run in 16 seconds on a direct threaded
+forth implementation. This benchmark will run in 17 seconds in TILE forth 
+(compiled with GNU CC and optimized) on a SUN-3/60 and less than 9 seconds
+on a SUN SPARCstation 1. These times are the total time for loading TILE
+forth, compiling and executing the benchmark. Comparing to, for instance,
+other interpretive languages such as Lisp, where one of the classical 
+benchmarks is calculation of the Fibonacci function, the performance 
+increase is over a magnitude.
+
+The kernel supports the Standard Forth-83 word set except for the
+blocks file word set which are not used. The kernel is extended with
+many of the concepts from modern programming languages. Here is a list
+of some of the extensions; argument binding and local variables, queue
+management, low level compiler words, string functions, floating point
+numbers, exceptions and multi-tasking. The TILE Forth environment also
+contains a set of reusable source files for high level multi-tasking, 
+data description and structuring modules, and a number of programming 
+tools.
+
+To allow interactive and incremental program development TILE Forth
+includes a programming environment as a mode in GNU Emacs. This environ-
+ment helps with program structuring, documentation search, and program
+development. Each vocabulary in the kernel and the source library file is 
+described by a manual, documentation and test file. This style of 
+programming is emphasized throughout the environment to increase 
+understanding and reusability of the library modules. During compilation
+TILE Forth's io-package keeps track for which modules have been loaded
+so that they are only loaded once even if included by several modules.
+
+Writing a Forth in C gives some possibilities that normally are
+not available when performing the same task in assembly. TILE Forth
+has been profiled using the available tools under Unix. This information
+has been used to optimize the compiler so that it achieves a compilation
+speed of over 200.000 lines per minute on my machine (a disk-less SUN
+SPARCstation 1). Currently code is only saved in source form and 
+applications are typically "compile-and-go".
+
+So far TILE Forth has been ported and tested at over forty locations
+without any major problems except where C compilers do not allow sub-
+routine pointers in data structures. 
+
+
+2.	EXTENSIONS
+
+What is new in TILE forth? First of all the overall organization of
+words. To increase portability and understanding of forth code modules
+vocabularies are used as the primary packaging mechanism. New data types
+such as rational and floating point numbers are implemented in separate
+vocabularies. The vocabularies act as both a program module and an 
+abstract data type.
+
+2.1	Extensible interpreter
+
+To allow extension of the literal symbol set (normally only integer
+numbers) each vocabulary is allowed to have a literal recognition
+function. This function is executed by the interpreter when the symbol
+search has failed. The literal recognizer for the forth vocabulary is 
+"?number". This simple mechanism allows modules such as for rational and 
+floating point numbers, and integer ranges to extend with their own
+literal function.
+
+2.2	Data description
+
+As the Forth-83 Standard lack tools for description of data structures 
+TILE Forth contains a fairly large library of tools for this purpose. 
+These are described more in detail in the next section.
+
+2.3	Argument binding and local variables
+
+When writing a forth function with many arguments stack shuffling
+becomes a real pain. Argument binding and local variables is a nice
+way out of these situations. Also for the new-comer to Forth this
+gives some support to this at first very cryptic language. Even
+the stack function may be rewritten using this mechanism:
+
+	: 2drop { a b } ;
+	: 2swap { a b c d } c d a b  ;
+	: fac { n } n 0> if n 1- recurse n * else 1 then ;
+
+The argument frame is created on top of the parameter stack and is
+disposed when functions is exited. This implementation style of
+reduces the cost of binding as most functions have more arguments
+then return values. A minimum number of data elements have to be
+move to create and manage the argument frame.
+
+2.4 	Exception handling
+
+Another extension in TILE Forth is exception handling with multiple
+exception handling code block. The syntactical structure is very
+close to that of Ada, i.e., any colon definition may contain an error
+handling section. Should an error occur during the execution of the
+function the stack status is restore to the situation at the call
+of the function and the latest exception block is executed with the 
+signal or exception as a parameter;
+
+	exception zero-divide ( -- exception)
+
+	: div ( x y -- z)
+          /
+	exception> ( x y signal -- )
+	  drop zero-divide raise
+        ;
+
+Error situations may be indicated using an exception raise function. 
+Low level errors, such as zero division, are transformed to exceptions 
+in TILE Forth.
+
+2.5	Entry visibility and forward declaration
+
+Last, some of the less significant extension are forward declaration
+of entries, hidden or private entries, and extra entry modes. Forward
+declaration of entries are automatically bound when the entry is later
+given a definition. Should a binding not exist at run-time an error
+message is given and the computation is aborted.
+
+	forward eval ( ... )
+
+	: apply ( ... ) ... eval ... ;
+	: eval ( ... ) ... apply ... ;
+
+Three new entry modes have been added to the classical forth model 
+(immediate). These allow hiding of entries in different situations.
+The first two marks the last defined words visibility according to
+an interpreter state. These two modifiers are called "compilation" 
+and "execution" and are used as "immediate". A word like "if" is
+"compilation immediate" meaning it is visible when compiling and 
+then always executed. 
+
+	compiler forth definitions
+
+	: if ( -- ) compile (?branch) >mark ; compilation immediate
+
+The "private" modifier is somewhat different. It concerns the
+visibility across vocabularies (modules and types). If a word is
+marked as "private" the word is only visible when the vocabulary in 
+which it is defined in is "current". This is very close to the concept
+of hidden in modules and packages in Modula-2 and Ada.
+
+	4 field +name ( entry -- addr) private
+
+The above definition will only be visible in the vocabulary it was 
+defined. The "private" modifier is useful to help isolate implementation
+dependencies and reduce the name space which also increases compilation
+speed.
+
+
+3. 	SOURCE LIBRARY
+
+The TILE Forth programming environment contains a number of tools to 
+make programming in Forth a bit easier. If you have GNU Emacs, TILE 
+Forth may run in a specialized forth-mode. This mode supports automatic 
+program indentation (pretty printing), documentation search, and 
+interactive and incremental program development, or "edit-compile-test" 
+style of program development.
+
+To aid program development there is also a source code library with
+manual pages, documentation (glossary), and test and example code.
+Most of the source code are data modeling tools. In principle, from 
+bit field definition to object oriented structures are available. The 
+source code library also contains debugging tools for tracing, break-
+point'ing and profiling of programs. 
+
+The first level of data modeling tools are modules for describing;
+1) bit fields, 2) structures (records), 3) aggregates of data 
+(vectors, stacks, buffers, etc), 4) high level data objects
+(lists, sets, etc), and last, 5) object oriented programming with
+the three major models (relations, prototypes, and classes/instances).
+
+The next level of tools are some tools for high level syntactic sugar
+for multi-tasking concepts (semaphores, channels, etc), anonymous code
+block (blocks), a general top down parser with backtrack and semantic
+binding, and a simulation package. The source library will be extended
+during the coming releases.
+
+
+4. 	PROGRAMMING STYLE
+
+A source code module has, in general, the following structure; the 
+first section includes any modules needed (these are only loaded once).
+Second follows global definitions for the module. Normally this is 
+a vocabulary for the module. Third comes the search chain to be used
+throughout the module. It is important not to change the search order
+as 1) it becomes difficult for a reader to understand the code, 2)
+any change in the search chain flushes the internal lookup cache
+in TILE Forth and reduces compilation speed.
+
+	.( Loading the Library...) cr
+
+	#include someLibrary.f83
+	...
+
+	( Global data and code definitions)
+
+	: aGlobalDefinitions ( -- ) ... ;
+
+	vocabulary theLibrary
+
+	someLibrary ... theLibrary definitions
+
+	( Local data and code definitions)
+
+	: aPrivateDefinitions ( -- ) ... ; private
+	...
+	: aDefinitions ( -- ) ... ; 
+
+	forth only
+
+To create lexical levels within the same vocabulary the word "restore" 
+may be used. It stores the vocabulary pointer to the given entry and 
+thus hides the words defined after this entry. The word "restore" has 
+much the same action as "forget" but without putting back the dictionary 
+pointer.
+
+
+5.	SOURCE FILES
+
+The TILE Forth source is broken down into the following files:
+
+README
+   This short documentation of TILE.
+
+COPYING
+   The GNU General Public License.
+
+INSTALL
+   Some help on how to install TILE Forth.
+
+PORTING
+   Some help on how to port TILE Forth and typical problems.
+
+Makefile
+   Allows a number of compilation styles for debugging, profiling, 
+   sharing etc. New machines and conditional compilation symbols are 
+   added here.
+
+src
+   The C source library with the kernel code and GNU Emacs forth-mode
+   E-lisp source.		
+
+lib
+   The Forth-83 source library for data description and management, 
+   high level tasking, etc.
+
+tst
+   Test and example file for each Forth-83 source code file and a set
+   of benchmarks.
+
+man
+   Manual pages for the TILE Forth C kernel and Forth-83 source code 
+   library.
+
+doc
+   Documentation and glossaries for each source code file and kernel
+   vocabularies (generated by make help command).
+
+bin
+   Utility commands and the TILE forth compiler/interpreter.
+
+
+
+6.	CONFIGURATION
+
+TILE forth is targeted for 32-bit machines and no special aid is 
+available to allow it to be compiled for other bit-widths. The 
+configuration is maintained by "make" files. 
+
+These configuration files allows a number of different modes to support
+typical program development phases (on C level) such as debugging, 
+profiling, optimization and packaging. Please see the information in
+these files.
+
+
+7.	COPYING
+
+This software is offered as shareware. You may use it freely, but 
+if you do use it and find it useful, you are encouraged to send the
+author a contribution (>= $50) to the following address:
+
+	TILE Technology HB
+	Stragatan 19
+	S-582 67 Linkoping
+	SWEDEN
+
+If you send me a contribution, I will send you the manual pages and
+documentation files (and paper copies if you don't have access to a 
+good laserprinter), and will answer questions by mail. Your name 
+will also be put on a distribution list for future releases.
+
+For further information about copying see the file COPYING and
+the headers in the source code files. 
+
+
+8.	NOTE
+
+Due to the 32-bit implementation in C a number of Forth-83 definitions 
+are not directly confirmed. Below is a short list of words that might 
+give problems when porting Forth code to and from this environment:
+
+* The Block Word Set is not supported. Source code is saved as text 
+  files.
+
+* All stacks and words size are 32-bit. Special care must be taken
+  with memory allocation and access. Alway symbols names such as 
+  "cell" when allocating memory space.
+
+* Lowercase and uppercase are distinguished, and all forth words are
+  lowercase. 
+
+* A word in TILE is allowed arbitrary length as the name is stored as
+  as a null terminated string.
+
+* Input such as "key" performs a read operation to the operating system
+  which will echo the characters.
+
+* Variables should not allocate extra memory. "create" should be used.
+
+* Double number arithmetic functions are not available.
+
+Some major changes have been made to the kernel in this second release.
+To allow implementation of floating point numbers management and increase
+portability the kernel is now written in its own extendable data type 
+system. Some extension have become selectable such as the casting operator 
+in the interpreter.
+
+
+ACKNOWLEDGMENTS
+
+First of all I wish to express my gratitude to Goran Rydqvist for helped
+me out with the first version of the kernel and who implemented the 
+forth-mode for GNU Emacs. 
+
+Second, a special thanks to the beta test group who gave me valuable
+feedback. Especially Mitch Bradley, Bob Giovannucci Jr., Moises Lejter, 
+and Brooks David Smith. 
+
+Last, I wish to thank the many users that have been in touch after the
+first releases and given me comments and encouragements.
+
+Thank you all.

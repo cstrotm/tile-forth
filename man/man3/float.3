@@ -1,0 +1,106 @@
+.TH FLOAT 3X "August 1, 1990"
+.SH NAME
+float \- tile kernel floating point arithmetic functions
+.SH SYNOPSIS
+.B float
+.SH DESCRIPTION
+The 
+.IR tile
+forth kernel extends the Forth-83 Standard with arithmetic functions
+for 32-bit floating point numbers. When the "float" vocabulary is
+used floating point numbers will be recognized by "interpret", the
+kernel compiler and interpreter. The function "?float" is the "float"
+recognizer function.
+.TP
+.B 
+code ?float ( str -- [str false] or [f1 true]) recognizer
+Given a null-terminated string, "str", scans for a 32-bit
+floating point number. Returns the value and "true" else the
+string and "false". This word is the "float" vocabulary literal
+recognizer function. The function will also recognize the symbols
+"Infinity", "-Infinity", and "NaN" (not a number) which are defined
+by the IEEE single precision floating point number system.
+.TP
+.B 
+code 1/f ( f1 -- f2)
+"f2" is the 32-bit floating point result of dividing one by "f1".
+.TP
+.B 
+code f* ( f1 f2 -- f3)
+"f3" is the 32-bit floating point product of "f1" and "f2".
+.TP
+.B
+code f+ ( f1 f2 -- f3)
+"f3" is the 32-bit floating point arithmetic sum of "f1" and "f2".
+.TP
+.B
+code f- ( f1 f2 -- f3)
+"f3" is the 32-bit floating point result of subtracting "f2" from "f1".
+.TP
+.B
+code f. ( f1 -- )
+The 32-bit floating point number "f1" is displayed in the standard format
+on the current output stream.
+.TP
+.B
+code f/ ( f1 f2 -- f3)
+"f3" is the 32-bit floating point number the quotient of "f1" divided by
+the divisor "f2". An error condition results if the divisor is zero. 
+.TP
+.B
+code f>i ( f1 -- i1)
+The 32-bit floating point number "f1" is converted to a 32-bit integer.
+.TP
+.B
+vocabulary float ( -- )
+The floating pointer number extension vocabulary. Include into the
+vocabulary search set, "context", to allow access to these extensions.
+.TP
+.B
+code fnegate ( f1 -- f2)
+"f2" is the negated value of the floating point value "f1", i.e., 
+the difference of zero less "f1".
+.TP
+.B
+code i>f ( i1 -- f1)
+The 32-bit integer "i1" is converted to a 32-bit floating point number,
+"f1".
+.\" .SH INTERNALS 
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode 
+of the entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

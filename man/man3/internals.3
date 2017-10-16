@@ -1,0 +1,322 @@
+.TH INTERNALS 3X "August 1, 1990"
+.SH NAME
+internals \- tile forth kernel internal data structures
+.SH SYNOPSIS
+.B "#include internals.f83"
+.LP
+.B forth
+.SH DESCRIPTION
+High level definitions of the internal data structures of the
+.IR tile
+forth kernel.
+Defines the structure of vocabulary entries; the linkage structure, 
+name string, mode field, interpretation code, and parameter field.
+Utility functions for displaying the current vocabulary search order, 
+the current definitions vocabulary and the internal state of an entry.
+General definitions iterator for extraction of entries of specific
+code type.
+.SS Numerical constants
+Predefined constants for some of the most common values used for 
+storage allocation and integer value initialization.
+.TP
+.B 
+constant BITS/BYTE ( -- num)
+Number of bits per byte.
+.TP
+.B 
+constant BITS/WORD ( -- num)
+Number of bits per word in stack data etc. 
+.TP
+.B
+constant BYTES/WORD ( -- num)
+Number of bytes per word. 
+.TP
+.B constant MAX_INT ( -- int)
+Maximum integer number in two's complement.
+.TP
+.B
+constant MIN_INT ( -- int)
+Minimum integer number in two's complement.
+.SS Entry structure
+The internal fields of an entry in a
+.IR tile
+forth vocabulary. Defined as a structure with the traditional fields;
+link, name, mode, code, and parameter. Definition of the entry mode 
+and interpretation code field.
+.TP
+.B 
+struct.type ENTRY ( -- )
+Structure of vocabulary entries. Contains the fields;
+"+link", "+name", "+mode", "+code", and "+parameter".
+.TP
+.B 
+ptr +link ( entry -- addr)
+Field access of link to predecessor entry in vocabulary list. The
+vocabulary chain is maintained as a linked list in definition order
+and may be manipulated with the "lists" extensions.
+.TP
+.B 
+ptr +name ( entry -- addr)
+Field access of name string of an entry. The string is stored as
+a null terminated character sequence and may be manipulated using
+the "string" extensions.
+.TP
+.B
+long +mode ( entry -- addr)
+Field access of mode bit field of an entry. See also "ENTRY-MODES" 
+for the definition of the bit fields.
+.TP
+.B
+long +code ( entry -- addr)
+Field access of code enumerative of an entry. Stored as a
+number, enum, or pointer to high level code. See also "ENTRY-CODES".
+If the code field contains a number larger than the exception
+entry code "EXCEPTION" it is interpreted as a pointer to a high 
+level management block by the inner address interpreter.
+.TP
+.B
+long +parameter ( entry -- addr)
+Field access of parameter part of entry structure. Stored as
+a long. May contain a pointer to the body of the entry. This
+is the case for colon definitions and other entries with bodies
+larger than a "cell". The kernel word ">body" returns the contents
+of this field.
+.TP
+.B
+bitfield.type ENTRY-MODES ( -- )
+Bit field structure definition of the possible set of entry modes. 
+The kernel uses four bits and allows applications to use the
+bits within the three most significant bytes (bit 8-31).
+Defines the modes "IMMEDIATE", "EXECUTION", "COMPILATION",
+and "PRIVATE" as bit fields. These may be manipulated with
+the "bitfields" extension.
+.TP
+.B
+bit IMMEDIATE ( -- pos width)
+Access of immediate bit field in the mode field of an entry. If 
+the bit is set the entry is an "immediate" word. This bit is set 
+by the kernel word "immediate".
+.TP
+.B
+bit EXECUTION ( -- pos width)
+Access of execution bit field in mode. If the bit is set the
+entry is not visible in compilation mode. This bit may be
+set by the kernel word "execution".
+.TP
+.B
+bit COMPILATION ( -- pos width)
+Access of compilation bit field in mode. If the bit is set the 
+entry is not visible in execution mode. This bit may be set
+by the kernel word "compilation"
+.TP
+.B
+bit PRIVATE ( -- pos width)
+Access of private bit field in mode. If the bit is set the
+entry is only visible when the vocabulary in which it is defined
+is currently the definitions, "current", vocabulary.
+.TP
+.B
+bits RESERVED ( -- pos width)
+Access of reserved bit field in mode. These bits of the mode
+are reserved for the kernel. Bits 8-31 may be freely used by
+applications.
+.TP
+.B
+enum.type ENTRY-CODES ( -- )
+Predefined code types. Used by the kernel, inner interpreter, to
+determine management of primitives. Defines the enumerates; "CODE", 
+"COLON", "VARIABLE", "CONSTANT", "VOCABULARY", "CREATE", "USER", 
+"LOCAL", and "EXCEPTION". Codes larger than "EXCEPTION" are regarded 
+as pointers to forth level management code, and are used to implement
+high level management compiled by the words following "does>".
+.TP
+.B
+enum CODE ( -- enum)
+Numeral for machine level code management. The parameter field
+of the entry is a pointer to a C procedure implementing the function.
+The inner interpreter will call the procedure.
+.TP
+.B
+enum COLON ( -- enum)
+Numeral for forth level code management. The parameter field
+of the entry is a pointer to the body of the definition. The
+inner interpreter will push the instruction pointer onto the
+return stack and use the parameter field as the new instruction
+pointer.
+.TP
+.B
+enum VARIABLE ( -- enum)
+Numeral to mark variable management of entry. The parameter field
+of the entry is used for the variable area. The address of the
+parameter field is pushed onto the data stack.
+.TP
+.B
+enum CONSTANT ( -- enum)
+Numeral to mark constant management of entry. The parameter field
+contains the constant value. The value is pushed onto the data stack.
+.TP
+.B
+enum VOCABULARY ( -- enum)
+Numeral to mark vocabulary management of entry. The parameter field
+contains a pointer to the latest defined entry in the vocabulary.
+The vocabulary is appended first to the vocabulary search set, 
+"context".
+.TP
+.B
+enum CREATE ( -- enum)
+Numeral to mark create, symbol, management of entry. 
+The parameter field contains a pointer to the data area for the entry.
+This pointer is pushed onto the parameter stack by the inner
+interpreter.
+.TP
+.B
+enum USER ( -- enum)
+Numeral to mark user management of entry. The parameter
+field contains the offset from the task instance pointer.
+The address of the user variable, calculated from the current
+running task pointer, "running", and the offset is pushed onto
+the parameter stack by the inner interpreter.
+.TP
+.B
+enum LOCAL ( -- enum)
+Numeral to mark local variable management of entry. The
+parameter field contains the offset within the current 
+frame to the location of the argument or local variable.
+The value of the frame variable is pushed onto the parameter
+stack.
+.TP
+.B
+enum FORWARD ( -- enum)
+Numeral to mark forward management of entry. The parameter
+field contains initially "nil" and is replaced if the entry is
+redefined later. If the entry is used before defined an error message
+is given and execution is aborted.
+.TP
+.B
+enum FIELD ( -- enum)
+Numeral to mark field management of entry. The parameter
+field contains the field offset. The offset is added to the 
+pointer on top of the parameter stack.
+.TP
+.B
+enum EXCEPTION ( -- enum)
+Numeral to mark exception variable management of entry. The
+parameter field contains a pointer to the entry.
+.SS Utility functions
+Functions for displaying the current vocabulary search
+path and internal state of entries. Also display function to
+retrieve the current set of vocabularies.
+.TP
+.B
+: .entry ( entry -- )
+Given a pointer to an entry prints all fields of the entry.
+.TP
+.B
+: .context ( -- )
+Similar to "words" but prints the current state of the vocabulary
+search set, "context".
+.TP
+.B
+: .current ( -- )
+Prints the name of the current definitions vocabulary.
+.TP
+.B
+: .entries ( code -- )
+Prints the name of the available entries of the given code type
+along the current definitions vocabulary, "current".
+.\" .SH INTERNALS
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X), 
+.IR string(3X), 
+.IR enumerates(3X), 
+.IR structures(3X), 
+.IR bitfields(3X),
+.IR blocks(3X),
+.IR lists(3X),
+.IR sets(3X).
+.SH EXAMPLES
+To print the internal fields of the entry 
+.I forth,
+and access and verify its code type:
+.RS
+.LP
+.nf
+.B
+#include internals.f83
+.LP
+.B
+' forth .entry cr
+.B
+' forth +code @ VOCABULARY = . cr
+.fi
+.RE
+.LP
+A procedure to print out all variables in the "current" vocabulary:
+.RS
+.LP
+.nf
+.B 
+#include blocks.f83
+.B
+#include lists.f83
+.LP
+.B
+blocks lists
+.LP
+.B
+: .variables ( -- )
+.B
+	last 
+.B
+	block[ ( entry -- ) 
+.B
+		dup +code @ VARIABLE = 
+.B
+		if .name space else drop then
+.B
+	];
+.B
+	map-list 
+.B
+;
+.fi
+.RE
+.SH NOTE
+The function list in each sub-section is sorted in logical order. The
+type and mode of the entries are indicated together with their parameter
+stack effect.
+.SH WARNING
+These extensions are very implementation dependent and caution must 
+be take as code written using these definitions is not directly portable
+to other forth environments.
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

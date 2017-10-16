@@ -1,0 +1,162 @@
+.TH MAPPINGS 3X "August 7, 1990"
+.SH NAME
+mappings \- vector represented mappings definitions
+.SH SYNOPSIS
+.B "#include mappings.f83"
+.LP
+.B mappings
+.SH DESCRIPTION
+Library for mappings represented as vectors. The mapping consists of pairs of 
+cells, domain and range, and is terminated by a double zero pair. This mapping
+representation is mainly used for small mapping sets as all operations are
+dependent on the size of the mapping. The pair zero-zero cannot be a member of
+the mapping.
+.TP
+.B
+: .mapping ( mapping -- )
+Assuming that the domain is entry addresses this word will display the mapping
+as a set of pairs. The following form is used:
+.br
+.B { 
+.I <pairs>
+.B }
+.br
+where the 
+.I <pairs> are is the format:
+.br
+.B (
+.I <entry>
+.I <value>
+.B )
+.br
+.TP
+.B
+: ?empty-mapping ( mapping -- bool)
+Returns "true" if the mapping is empty else "false".
+.TP
+.B
+: ?map-mapping ( mapping block[range domain -- bool] -- )
+Conditional iterator function for mappings. The block will receive
+the pair, domain and range, as parameters and should return a boolean
+flag indicating is the iterator should terminate. The return value
+"true" will terminate the iterator.
+.TP
+.B
+: ?range-mapping ( domain mapping -- bool)
+Returns "true" is the domain is defined and has a range in the mapping
+else "false" is returned.
+.TP
+.B
+: add-mapping ( range domain mapping -- )
+Adds the domain-range pair to the mapping. If the domain is already defined
+in the mapping the new range value is stored.
+.TP
+.B
+: empty-mapping ( mapping -- )
+This word will empty the mapping by assigning the terminal pair first
+in the mapping vector.
+.TP
+.B
+: map-mapping ( mapping block[range domain -- ] -- )
+Iterator function for mappings. The block will receive the domain-range
+pair as parameters. The block is called for all pairs in the mapping.
+.TP
+.B
+: mapping ( size -- )
+Used in the following form:
+.br
+.I <size>
+.B mapping
+.I <name>
+.B ( -- mapping)
+.br
+to create a mapping variable. All operation are destructive on mapping
+variables. The maximum number of domain-range pairs in a mapping set is
+.I <size> 
+- 1.
+.TP
+.B
+vocabulary mappings ( -- )
+The vector represented mapping library vocabulary. Include into the
+vocabulary search set, "context", to allow access to these extensions.
+.TP
+.B
+: range-mapping ( domain mapping -- addr)
+Returns the range address, "addr", for the domain in the mapping. The
+value "nil" is returned if the domain is not a member of the mapping.
+The address may be used to manipulate the range value. Most mapping
+operations are destructive. This makes the address only valid until
+the next destructive mapping operation.
+.TP
+.B
+: remove-mapping ( domain mapping -- )
+Removes the domain-range pair from the mapping.
+.TP
+.B
+: size-mapping ( mapping -- num)
+Returns the number of domain-range pairs in the mapping.
+.SH INTERNALS
+The
+.IR mappings
+library contains the following internal function to search a mapping and
+access the domain-range pair.
+.TP
+.B
+field +domain ( mapping -- addr) private
+Access field for domain address of a domain-range pair in a mapping vector.
+.TP
+.B
+field +pair ( mapping -- addr) private
+Access field for the next pair address in a mapping vector.
+.TP
+.B
+field +range ( mapping -- addr) private
+Access field for range address of a domain-range pair in a mapping vector.
+.TP
+.B
+: search-mapping ( domain mapping -- [addr1] or [domain addr2 false])
+Primitive mapping search function. Tries to locate the domain-range pair
+in the mapping. If found the pair address, "addr1", is returned and
+may be accessed with the fields; "+domain", and "+range". If not found
+the domain and the address of the terminal pair together with the flag
+"false" is returned. The function is used to implement the words 
+"add-mapping", "remove-mapping", "?range-mapping", and "range-mapping".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR blocks(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the entry
+is indicated together with the parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

@@ -1,0 +1,421 @@
+\
+\  TOP DOWN PARSER DEFINITIONS
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 12 February 1990
+\
+\  Last updated on: 21 August 1990
+\
+\  Dependencies:
+\       (forth) forth, compiler, structures, blocks, internals
+\
+\  Description:
+\       Top down parser virtual machine instructions.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Parser definitions...) cr
+
+#include internals.f83
+#include structures.f83
+#include blocks.f83
+
+vocabulary parser ( -- )
+
+compiler blocks structures parser definitions
+
+\ Grammer symbol structure
+
+struct.type symbol ( -- ) 
+  ptr +entry ( symbol -- addr) private
+  ptr +syntax ( symbol -- addr) private
+  ptr +primary ( symbol -- addr) private
+struct.init ( symbol -- )
+  last over +entry !			( Assign pointer back to entry)
+  nil over +syntax !			( Initiate syntax pointer)
+  nil swap +primary !			( Initiate primary pointer)
+struct.end
+
+\ Grammer production structure
+
+struct.type rule ( -- ) private
+  ptr +next ( rule -- addr) private
+  ptr +rule ( rule -- addr) private
+struct.end
+
+\ Scanner buffer and break function pointer
+
+variable buffer ( -- addr)
+variable >buffer ( -- addr)
+variable >break ( -- addr)
+variable >skip ( -- addr)
+
+: skip-white-space ( addr1 -- addr2)
+  begin					( Skip blanks before symbol)
+    dup c@ dup				( Fetch the character)
+    32 > not swap			( Check if it is not a character)
+    0= not and				( Check if it is not null)
+  while
+    1+					( Step to next character)
+  repeat
+; 
+
+' skip-white-space >skip !		( Assign initiate skip function)
+
+: break-on-special ( addr1 -- bool)
+  c@					( Fetch next character)
+  dup ascii a ascii z ?within		( Check if a lowercase letter)
+  if drop false				( Return false)
+  else
+    dup ascii A ascii Z ?within		( Check if a uppercase letter)
+    if drop false			( Return false)
+    else
+      ascii 0 ascii 9 ?within not	( Check if not a digit character)
+    then
+  then
+; 
+
+: break-on-white-space ( addr -- bool)
+  c@ 32 > not 				( Forth word break function)
+; 
+
+' break-on-special >break !		( Assign initiate break function)
+
+: scan ( -- addr n)
+  >buffer @				( Start scanning in input buffer)
+  >skip @ execute			( Perform skip function)
+  dup					( Save pointer to beginning)
+  dup >break @ execute			( Use break function)
+  if dup c@				( Check for a single break character)
+    if 1+ then				( Increment to capture)
+  else
+    begin
+      1+				( Increment to next character)
+      dup >break @ execute		( Use break function)
+    until				( Time to stop scanning)
+  then
+  dup >buffer !				( Save pointer to next character)
+  over -				( Calculate number of characters)
+;
+
+\ String matching function
+
+#ifundef -match
+
+: -match ( addr1 addr2 n -- bool)
+  ?dup					( Check for non zero length)
+  if >r					( Save length)
+    begin
+      over c@ over c@ =			( Compare two character)
+    while
+      1+ swap 1+ swap			( Move to the next characters)
+      r> 1- ?dup			( Decrement length and check)
+      if >r				( Save length)
+      else
+	drop drop false exit		( Drop pointers and return equal)
+      then
+    repeat
+    r> drop				( Drop length)
+  then
+  drop drop				( Drop pointers)
+  true					( And return not equal)
+; private
+
+#then
+
+
+\ The result of a parse: list of semantic actions
+
+128 constant semantics-size ( -- num) private
+create semantics ( -- addr) private semantics-size cells allot
+variable >semantics ( -- addr) private
+
+: semantic, ( addr -- )
+  >semantics @ !			( Append to list of semantics)
+  cell >semantics +!			( Point to next free place in list)
+;
+
+: bind ( addr -- )
+  ['] (literal) semantic,		( Generate a literal for the parameter)
+  semantic,				( Passed at semantic execution time)
+;
+
+\ Parser environment for seize, release and backtrack
+
+: seize ( rule -- rule x y rule)
+  dup >r				( Copy rule parameter)
+  >buffer @ >semantics @		( Build backtrack environment)
+  r>					( Return copy of rule)
+; private
+
+: release ( rule x y -- )
+  drop drop drop			( Drop environment frame)
+; private
+
+: backtrack ( x y  -- )
+  >semantics ! >buffer !		( Restore environment frame)
+; private
+
+\ Utility function for Parser Virtual Machine Instructions
+
+: rule ( rule -- bool)
+  +rule call				( Execute rule function)
+; private
+
+: syntax ( symbol -- bool)
+  +syntax @ ?dup			( Fetch syntax definition)
+  if					( If available then for all rules)
+    begin
+      ?dup				( For all rules)
+    while
+      seize rule			( Seize the environment. Check rule)
+      if release true exit then		( If accepted then return accept)
+      backtrack				( Else backtrack to latest environment)
+      +next @				( And try next rule)
+    repeat
+  then
+  false					( Return reject)
+; private
+
+: primary ( symbol -- bool)
+  +primary @ ?dup			( Fetch primary definition )
+  if call				( If available call function)
+  else
+    false				( Else return reject)
+  then
+; private
+
+\ Parser Virtual Machine Instructions
+
+: terminal ( symbol -- [] or [false])
+  +entry @ +name @			( Access name string for symbol)
+  scan -match				( Scan next token and match)
+  if r> drop false then			( If not equal then reject)
+;
+
+: non-terminal ( symbol -- [] or [false])
+  dup syntax				( Try syntax definition)
+  if drop true				( If accepted continue)
+  else
+    primary				( If rejected try primary function)
+  then
+  not
+  if r> drop false then			( If not accepted then reject)
+;
+
+: zero-or-one ( symbol -- )
+  dup syntax				( Try syntax definition)
+  if drop				( Drop symbol parameter)
+  else
+    primary drop			( Try primary definition)
+  then					( Always continue)
+;
+
+: zero-or-more ( symbol -- )
+  begin
+    dup syntax				( Try syntax definition)
+    if true				( One more time)
+    else
+      dup primary			( Try primary definition)
+    then
+    not					( Check for more)
+  until
+  drop					( Drop symbol parameter and continue)
+;
+
+: semantic ( -- true)
+  r> @ semantic, true			( Append semantic function and accept)
+;
+
+: no-semantic ( -- true)
+  r> drop true				( Always return accepted)
+;
+
+\ Low Level Parser Interaction
+
+forth
+
+: parse ( symbol -- [semantics] or [false])
+  buffer @ >buffer !			( Initiate buffer pointer)
+  semantics >semantics !		( And list of semantics)
+  syntax				( Try syntax definition)
+  if ['] exit semantic,			( If accepted the append exit)
+    semantics				( And return the list of semantics)
+  else
+    false				( Return not parsed)
+  then
+;
+
+: parse" ( symbol -- )
+  ascii " word buffer !			( Parse the following string)
+  parse ?dup				( Use the parameter symbol syntax)
+  if call				( Call the semantic actions if parsed)
+  else
+    ." No parse" cr			( Else no parse message)
+  then
+; execution
+
+\ High Level Interaction Top Loop
+
+256 constant interact-buffer-size ( -- num) private
+create interact-buffer ( -- addr) private interact-buffer-size allot
+
+: interact ( symbol -- )
+  interact-buffer buffer !		( Assign input buffer)
+  begin
+    interact-buffer			( Input buffer for interact)
+    interact-buffer-size expect		( Read a line to input buffer)
+    span @				( Check for empty lines)
+    if 0 interact-buffer span @ + c!	( Null terminal the line)
+      dup parse ?dup			( Try parsing it)
+      if call				( If parsed the call semantic actions)
+      else
+	buffer @ >buffer !		( Rescan for forth to level loop)
+	['] forth +name @		( Use forth name field)
+	scan -match			( Scan first token and match)
+	if ." No parse" cr		( Else no parse possible)
+	else
+	  drop exit			( Drop parameter symbol and exit)
+	then
+      then
+    then
+  again
+;
+
+\ Syntax for definition of primary functions and syntax rules
+
+: primary ( symbol -- )
+  here swap +primary !			( Add primary function to symbol)
+  ]					( Start compiling primary function)
+;
+
+: end.primary ( -- )
+  [compile] ;				( Stop compiling primary function)
+; immediate compilation
+
+: syntax ( symbol -- )
+  dup +syntax @ ?dup			( Check if the symbol has syntax)
+  if swap drop				( Append last in list of rules)
+    begin
+      dup +next @ ?dup			( Check if this is the last rule)
+    while				( If not then step to next rule)
+      swap drop
+    repeat     
+    here swap +next !			( Link into list of rules)
+  else
+    here swap +syntax !			( Add as first rule)
+  then
+  nil , ]				( And start compiling the rule)
+;
+
+: end.syntax ( -- )
+  [compile] [				( Stop compiling the rule)
+; immediate compilation
+
+\ Basic primary functions: empty, eoln, number och entry
+
+parser
+
+symbol empty ( -- symbol)
+symbol eoln ( -- symbol)
+symbol number ( -- symbol)
+symbol identifier ( -- symbol)
+symbol entry ( -- symbol)
+
+empty primary ( -- true)
+  true					( Always accept)
+end.primary
+
+eoln primary ( -- bool)
+  scan swap drop 0=			( Scan next token and check length)
+end.primary
+
+number primary ( -- bool)
+  scan					( Scan next token and check length)
+  if dup 0 swap				( Convert to a number and check)
+    convert rot =
+    if drop false			( If not a number reject)
+    else
+      bind true				( Else bind the number and accept)
+    then
+  else
+    drop false				( If no token scanned the reject)
+  then
+end.primary
+  
+identifier primary ( -- bool)
+  scan ?dup				( Scan next token and check length)
+  if over c@ dup			( Fetch first character and check)
+     ascii a ascii z ?within swap	( A lowercase letter or)
+     ascii A ascii Z ?within or		( A uppercase letter )
+     if swap bind bind true		( Bind identifier string and accept)
+     else
+       drop drop false			( Reject this parse)
+     then
+   else
+     drop false				( Reject this parse. No more input)
+   then
+end.primary
+   
+parser
+
+\ Token buffer for vocabulary lookup
+
+128 constant token-size ( -- num) private
+create token ( -- addr) token-size allot private
+
+entry primary ( -- bool)
+  scan ?dup				( Scan next token and check length)
+  if dup >r				( Save length of scan string)
+    token swap cmove			( Assign token string and)
+    0 token r> + c!			( terminate with a null character)
+    token find				( Try to locate the symbol)
+    if dup +code @ VOCABULARY =		( Check if the entry is a vocabulary)
+      if scan 1 =			( Scan next token and check length)
+	if c@ ascii : =			( Check first character as colon)
+	  if >break @			( Fetch old break function)
+	    ['] break-on-white-space	( Use forth word break function)
+	    >break !			( as the scanner break function)
+	    scan 			( Scan again for token)
+	    rot >break !		( Restore old break function)
+	    ?dup			( Check length)
+	    if dup >r			( Pack as a null terminated string)
+	      token swap cmove		( Move string)
+	      0 token r> + c!		( Pad with null character)
+	      token swap lookup		( Look for the token in the vocabulary)
+	      if bind true exit then	( If found then bind, accept and exit)
+	    then
+	    drop			( Drop string parameter)
+	  then
+	then
+      else
+	bind true exit			( Bind symbol and accept)
+      then
+    then
+  then
+  drop false				( If no token scanned the reject)
+end.primary
+  
+forth only

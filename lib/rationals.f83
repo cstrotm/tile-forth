@@ -1,0 +1,172 @@
+\
+\  RATIONAL NUMBER MANAGEMENT
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 25 May 1990
+\
+\  Last updated on: 17 August 1990
+\
+\  Dependencies:
+\       (forth) forth, structures
+\
+\  Description:
+\       Management of a rational number system. Allows recognition of
+\       rational literals, calculation with rational numbers, and output.
+\       The rational number system includes representation of undefined,
+\       infinity and normalization of rational numbers towards zero.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Rational number definitions...) cr
+
+#include structures.f83
+
+vocabulary rationals ( -- )
+
+structures rationals definitions
+
+struct.type RATIONAL ( -- )
+  long +denom ( rational -- addr) private
+  long +num ( rational -- addr) private
+struct.end
+  
+: rational ( num denom -- )
+  create , ,
+does> ( rational -- num denom)
+  2@
+;
+
+ 0 0 rational  undefined ( -- num denom)
+ 0 1 rational  zero ( -- num denom)
+ 1 0 rational  infinity ( -- num denom)
+-1 0 rational -infinity ( -- num denom)
+ 
+: rnormalize ( num1 denom1 -- num2 denom2)
+  ?dup
+  if over 0=
+    if 2drop zero exit then
+    2dup
+    begin
+      ?dup
+    while
+      tuck mod
+    repeat
+    tuck / -rot / swap
+    dup 0<
+    if negate swap negate swap then
+  else
+    ?dup
+    if 0>
+      if infinity else -infinity then
+    else
+      undefined
+    then
+  then
+;
+
+: rnegate ( num1 denom1 -- num2 denom2)
+  swap negate swap
+;
+
+: r+ ( num1 denom1 num2 denom2 -- num3 denom3)
+  >r over r@ =
+  if nip + r>
+  else
+    over * rot r@ * + swap r> *
+  then
+  rnormalize
+;
+
+: r- ( num1 denom1 num2 denom2 -- num3 denom3)
+  rnegate r+ 
+;
+
+: r* ( num1 denom1 num2 denom2 -- num3 denom3)
+  >r rot * swap r> * rnormalize
+;
+
+: 1/r ( num1 denom1 -- num2 denom2)
+  swap rnormalize
+;
+
+: r/ ( num1 denom1 num2 denom2 -- num3 denom3)
+  swap r*
+;
+
+: r. ( num denom -- )
+  ?dup
+  if over 0=
+    if 2drop ." zero"
+    else
+      swap 0 .r ." /" 0 .r
+    then
+  else
+    ?dup
+    if 0>
+      if ." infinity" else ." -infinity" then
+    else
+      ." undefined"
+    then
+  then
+  space
+;
+
+: ?r= ( num1 denom1 num2 denom2 -- bool)
+  rot = -rot = and
+;
+
+: ?r> ( num1 denom1 num2 denom2 -- bool)
+  r- drop 0>
+;
+
+: ?r< ( num1 denom1 num2 denom2 -- bool)
+  r- drop 0<
+;
+
+: i>r ( x -- num denom)
+  1
+;
+
+: r>i ( num denom -- x)
+  /
+;
+
+: ?rational ( str -- [num denom true] or [str false])
+  >r 0 r@ dup c@ ascii - =
+  if 1+ convert swap negate swap
+  else convert then
+  dup c@ ascii / =
+  if 0 swap 1+ convert c@ 0=
+    if r> drop rnormalize compiling
+      if swap [compile] literal then
+      true exit
+    then
+  then
+  2drop r> false
+; recognizer
+
+
+forth only
+

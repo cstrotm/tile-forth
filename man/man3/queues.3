@@ -1,0 +1,162 @@
+.TH QUEUES 3X "August 6, 1990"
+.SH NAME
+queues \- tile kernel double linked list extensions
+.SH SYNOPSIS
+.B "#include queues.f83"
+.LP
+.B "queues"
+.SH DESCRIPTION
+The 
+.IR tile
+forth kernel word set for support of double linked circular lists.
+Used by the kernel to maintain the run-time queue of tasks for
+the multi-tasking extension.
+.TP
+.B
+: .queue ( queue -- )
+Displays information about a queue header or item in the format:
+.br
+.B queue#
+.I <queue-pointer>
+.B succ:
+.I <succ-pointer>
+.B pred:
+.I <pred-pointer>
+.br
+.TP
+.B
+code ?empty-queue ( queue -- bool)
+Returns "true" if the queue is empty else "false". Successor pointer
+points to the queue itself. This definition is also available as forth
+code for portability to other environments.
+.TP
+.B
+: ?map-queue ( queue block[item -- bool] -- )
+Used in the following form:
+.br
+.I <queue> 
+.I <conditional-block> 
+.B ?map-queue
+.br
+to perform a block of code on each element of the queue until
+the block returns "true".
+.TP
+.B
+: ?member-queue ( item queue -- bool)
+Search for "item" in "queue". If found returns "true" else
+"false". 
+.TP
+.B
+struct.type QUEUE ( -- )
+Structure definition of double linked list. Used as follows 
+to create a new queue header instance:
+.br
+.B new-struct QUEUE ( -- queue)
+.br
+A named queue header may be created with:
+.br
+.B QUEUE 
+.I <queue-name>
+.B ( -- queue)
+.br
+Contains two private fields, "+succ" and "+pred".
+.TP
+.B
+code dequeue ( item -- )
+Removes "item" from any queue. Observe this function does not 
+require knowledge about which queue "item" is a member of.
+This definition is also available as a colon definition for
+portability of other environments.
+.TP
+.B
+code enqueue ( item queue -- )
+Inserts "item" into "queue" as the new predecessor element. If
+the "queue" parameter is a queue header "item" is inserted last 
+into the queue. "item" must be a pointer to a "QUEUE" field of a 
+structure or a sub-structure of "QUEUE".
+This definition is also available as a colon definition for
+portability of other environments.
+.TP
+.B
+: map-queue ( queue block[item -- ] -- )
+Used in the following form:
+.br
+.I <queue> 
+.I <block> 
+.B map
+.br
+Calls the parameter code "block" on each item in the queue. 
+.TP
+.B
+vocabulary queues ( -- )
+Vocabulary containing double linked circular list extensions.
+Include into the vocabulary search structure, "context", to 
+gain access to these extensions.
+.TP
+.B
+: size-queue ( queue -- num)
+Returns the length of a queue. The queue head is counted. 
+Returns a integer larger than zero.
+.TP
+.B
+: succ ( queue1 -- queue2) 
+Returns pointer to successor queue item.
+.TP
+.B
+: pred ( queue1 -- queue2)
+Returns pointer to predecessor queue item.
+.SH INTERNALS
+Private definitions in the 
+.I queues
+vocabulary;
+.TP
+.B 
+ptr +succ ( queue -- addr) private
+Field of the structure type "QUEUE". Modifiers a queue pointer
+to access successor pointer in queue structure. 
+.TP
+.B
+ptr +pred ( queue -- addr) private
+Field of the structure type "QUEUE". Modifiers a queue pointer
+to access predecessor pointer in queue structure.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR structures(3X),
+.IR blocks(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. 
+The type and mode of the entries are indicated together with their
+parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

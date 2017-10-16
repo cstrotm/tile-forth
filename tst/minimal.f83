@@ -1,0 +1,388 @@
+\
+\  A MINIMAL FORTH MACHINE SIMULATOR AND META-COMPILER
+\
+\  Copyright (C) 1989-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 1 August 1989
+\
+\  Last updated on: 23 August 1990
+\
+\  Dependencies:
+\       (forth) forth
+\
+\  Description:
+\       This library illustrates how a virtual forth machine and most of
+\       the language can be realized with only nine primitive instructions.
+\       A simulator for the minimal forth virtual machine is defined
+\       together with a meta-compiler and implementations of a large
+\       section of the forth language.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Minimal Forth Machine definitions...) cr
+
+vocabulary minimal ( -- ) 
+
+minimal definitions
+
+forth
+
+\ Hardware Devices: Registers and Stacks
+
+: register ( -- ) create 0 , does> @ ;
+: -> ( x -- ) ' >body [compile] literal compile ! ; immediate compilation
+: stack ( n -- ) create here swap 2+ cells allot here over cell+ ! here swap ! ;
+: push ( x s -- ) cell negate over +! @ ! ;
+: pop ( s -- x) dup @ @ cell rot +! ;
+: empty ( s -- ) dup cell+ @ swap ! ;
+: ?empty ( s -- bool) 2@ = ;
+: .stack ( s -- ) dup cell + @ swap @ ?do i @ . cell +loop ;
+
+
+\ Forth Machine Registers
+
+register tos ( -- x | Top of stack register)
+register ir ( -- x | Instruction register)
+register ip ( -- x | Instruction pointer)
+64 stack rp ( -- s | Return address stack)
+64 stack sp ( -- s | Parameter stack)
+
+\ Dump machine state
+
+: .registers ( -- )
+  ." ir: " ir .name space		( Dump name of current instruction)
+  ." ip: " ip cell - .			( Dump instruction pointer)
+  ." rp: " rp .stack			( Dump return stack)
+  ." tos: " tos .			( Dump top of stack register)
+  ." sp: " sp .stack cr 		( Dump parameter stack)
+;
+
+
+\ Forth Machine Instructions
+
+: instruction ( n -- ) create ; 
+: decode ( -- ) minimal [compile] ['] forth ; immediate compilation
+
+instruction 1+
+instruction 0=
+instruction NAND
+instruction >R
+instruction R>
+instruction !
+instruction @
+instruction EXIT
+instruction DUMP
+
+: CALL ( -- ) ip rp push ir >body -> ip ;
+
+
+\ The Minimal Forth Machine and additional state variables
+
+variable trace ( -- addr | Trace function pointer)
+variable cycles ( -- addr | Instruction cycle counter)
+variable restart ( -- addr | Restart instruction pointer)
+
+: reset-processor ( -- )
+  0 cycles !				( Initiate cycle counter)
+  restart -> ip				( And instruction pointer)
+  0 -> tos				( Clear top of stack)
+  sp empty				( And empty parameter stack)
+  rp empty				( And return stack)
+;
+
+: fetch-instruction ( -- instruction)
+  1 cycles +!				( Increment cycle counter)
+  ip @ dup -> ir			( Fetch next instruction)
+  ip cell+ -> ip			( And increment instruction pointer)
+;
+
+: processor ( -- )
+  reset-processor
+  begin
+    fetch-instruction
+    trace @ ?dup if execute then
+    case
+      decode 1+   of tos 1+ -> tos               endof
+      decode 0=   of tos 0= -> tos               endof
+      decode NAND of sp pop tos and not -> tos   endof
+      decode >R   of tos rp push sp pop -> tos   endof
+      decode R>   of tos sp push rp pop -> tos   endof
+      decode !    of sp pop tos ! sp pop -> tos  endof
+      decode @    of tos @ -> tos                endof
+      decode EXIT of rp pop -> ip                endof
+      decode DUMP of .registers                  endof
+      CALL
+    endcase
+    rp ?empty
+  until
+;
+
+: run ( -- ) ' restart ! processor ." cycles: " cycles @ . .registers ;
+: trace-instructions ( -- ) ['] .registers trace ! ;
+
+
+\ A simple meta-compiler for the Minimal Forth Machine
+
+minimal
+
+: CREATE ( -- ) create ; 
+: COMPILE ( -- ) compile compile ; immediate
+
+: DEFINE ( -- ) CREATE ] ;
+: END ( -- ) COMPILE EXIT [compile] [ ; immediate
+: BLOCK ( n -- ) cells allot ;
+: DATA ( -- ) , ;
+
+
+\ Variable management
+
+DEFINE [VARIABLE] ( -- addr) R> END
+: VARIABLE ( -- addr) CREATE COMPILE [VARIABLE] 1 BLOCK ; 
+
+
+\ Constant management
+
+DEFINE [CONSTANT] ( -- n) R> @ END
+: CONSTANT ( n -- ) CREATE COMPILE [CONSTANT] DATA ;
+
+
+\ Basic stack manipulation functions
+
+VARIABLE TEMP ( -- addr)
+
+DEFINE DROP ( x -- ) TEMP ! END
+DEFINE DUP ( x -- x x) TEMP ! TEMP @ TEMP @ END
+DEFINE SWAP ( x y -- y x) TEMP ! >R TEMP @ R> END
+DEFINE ROT ( x y z -- y z x) >R SWAP R> SWAP END
+DEFINE OVER ( x y -- x y x) >R DUP R> SWAP END
+DEFINE R@ ( -- x) R> R> DUP >R SWAP >R END
+
+
+\ Basic logical functions
+
+-1 CONSTANT TRUE ( -- true)
+ 0 CONSTANT FALSE ( -- false)
+
+DEFINE BOOLEAN ( x -- bool) 0= 0= END
+DEFINE NOT ( x y -- z) DUP NAND END
+DEFINE AND ( x y -- z) NAND NOT END
+DEFINE OR ( x y -- z) NOT SWAP NOT NAND END
+DEFINE XOR ( x y -- y) OVER OVER NOT NAND >R SWAP NOT NAND R> NAND END
+
+
+\ Primitive arithmetic constants and functions
+
+-2147483648 CONSTANT MIN-INT ( -- int)
+-2 CONSTANT -2 ( -- int)
+-1 CONSTANT -1 ( -- int)
+ 0 CONSTANT 0 ( -- int)
+ 1 CONSTANT 1 ( -- int)
+ 2 CONSTANT 2 ( -- int)
+ 2147483647 CONSTANT MAX-INT ( -- int)
+
+DEFINE 1- ( x -- y) NOT 1+ NOT END
+DEFINE 2+ ( x -- y) 1+ 1+ END
+DEFINE 2- ( x -- y) NOT 2+ NOT END
+
+
+\ Additional relational functions
+
+DEFINE 0< ( x -- bool) MIN-INT AND BOOLEAN END
+DEFINE 0> ( x -- bool) DUP 0= SWAP 0< OR NOT BOOLEAN END
+
+
+\ Cell sizes and cell increment function
+
+4 CONSTANT CELL ( -- num)
+DEFINE CELL+ ( x -- y) 1+ 1+ 1+ 1+ END
+
+
+\ Branch functions
+
+DEFINE (BRANCH) ( -- ) R> @ >R END
+DEFINE (?BRANCH) ( bool -- ) 0= DUP R@ @ AND SWAP NOT R> CELL+ AND OR >R END
+
+
+\ Compiler functions
+
+: >MARK ( -- addr) here cell allot ;
+: >RESOLVE ( addr -- ) here swap (forth) ! ;
+: <MARK ( -- addr) here ;
+: <RESOLVE ( -- addr) , ;
+
+: IF ( bool -- ) COMPILE (?BRANCH) >MARK ; immediate
+: ELSE ( -- ) COMPILE (BRANCH) >MARK swap >RESOLVE ; immediate
+: THEN ( -- ) >RESOLVE ; immediate
+: BEGIN ( -- ) <MARK ; immediate
+: WHILE ( bool -- ) COMPILE (?BRANCH) >MARK ; immediate
+: REPEAT ( -- ) COMPILE (BRANCH) swap <RESOLVE >RESOLVE ; immediate
+: UNTIL ( bool -- ) COMPILE (?BRANCH) <RESOLVE ; immediate
+: AGAIN ( -- ) COMPILE (BRANCH) <RESOLVE ; immediate
+
+
+\ Additional stack functions
+
+DEFINE ?DUP ( n -- [n n] or [0]) DUP IF DUP THEN END
+DEFINE TUCK ( x y -- y x y) SWAP OVER END
+DEFINE NIP ( x y -- y) SWAP DROP END
+DEFINE 2DUP ( x y -- x y x y) OVER OVER END
+DEFINE 2DROP ( x y -- ) DROP DROP END
+
+
+\ Arithmetical functions
+
+   
+DEFINE NEGATE ( x -- y) NOT 1+ END
+DEFINE ABS ( x -- y) DUP 0< IF NEGATE THEN END
+
+DEFINE + ( x y -- z)
+  DUP 0<
+  IF BEGIN DUP WHILE 1+ SWAP 1- SWAP REPEAT 
+  ELSE BEGIN DUP WHILE 1- SWAP 1+ SWAP REPEAT THEN
+  DROP
+END
+
+DEFINE - ( x y -- z) NEGATE + END
+
+DEFINE U< ( x y -- bool)
+  BEGIN
+    DUP IF 1- ELSE 2DROP FALSE EXIT THEN
+    SWAP
+    DUP IF 1- ELSE 2DROP TRUE EXIT THEN
+    SWAP
+  AGAIN
+END
+  
+DEFINE U* ( x y -- z)
+  >R 0 SWAP
+  BEGIN DUP WHILE 1- SWAP R@ + SWAP REPEAT
+  R> 2DROP
+END
+
+DEFINE U/MOD ( x y -- q r) 
+  >R 0 SWAP 
+  BEGIN DUP R@ - DUP 0< NOT WHILE SWAP DROP SWAP 1+ SWAP REPEAT
+  R> 2DROP
+END
+
+DEFINE * ( x y -- z) 
+  2DUP XOR 0< >R
+  ABS SWAP ABS SWAP U*
+  R> IF NEGATE THEN
+END
+
+DEFINE /MOD ( x y -- q r) 
+  2DUP XOR 0< >R OVER 0< >R 
+  ABS SWAP ABS SWAP U/MOD 
+  R> IF NEGATE THEN 
+  R> IF SWAP NEGATE SWAP THEN
+END
+
+DEFINE / ( x y -- q) /MOD DROP END
+DEFINE MOD ( x y -- r) /MOD NIP END
+
+DEFINE = ( x y -- bool) XOR BOOLEAN NOT END
+DEFINE < ( x y -- bool) - 0< END
+DEFINE > ( x y -- bool) - 0> END
+
+DEFINE MIN ( x y -- z) 2DUP > IF SWAP THEN DROP END
+DEFINE MAX ( x y -- z) 2DUP < IF SWAP THEN DROP END
+
+
+\ Number literals in meta-code
+
+DEFINE (LITERAL) ( -- ) R> DUP @ SWAP CELL+ >R END
+: LITERAL ( x -- ) COMPILE (LITERAL) , ; immediate
+
+
+\ And some test code just to show that it actually works
+
+DEFINE LOGIC-TEST ( -- )
+  [ 5 ] LITERAL NOT
+  [ 5 ] LITERAL [ 3 ] LITERAL AND
+  [ 5 ] LITERAL [ 3 ] LITERAL OR
+  [ 5 ] LITERAL [ 3 ] LITERAL XOR
+
+  [ 5 ] LITERAL 0=
+  [ 5 ] LITERAL 0<
+  [ 5 ] LITERAL 0>
+
+  [ 5 ] LITERAL [ 3 ] LITERAL =
+  [ 5 ] LITERAL [ 3 ] LITERAL <
+  [ 5 ] LITERAL [ 3 ] LITERAL >
+
+  [ 5 ] LITERAL [ 5 ] LITERAL =
+  [ 3 ] LITERAL [ 5 ] LITERAL <
+  [ 3 ] LITERAL [ 5 ] LITERAL >
+END
+
+run LOGIC-TEST
+
+DEFINE ARITHMETIC-TEST ( -- )
+  [ 5 ] LITERAL NEGATE
+
+  [ 5 ] LITERAL ABS
+  [ -5 ] LITERAL ABS
+
+  [ 5 ] LITERAL [ 3 ] LITERAL MAX
+  [ 5 ] LITERAL [ 3 ] LITERAL MIN
+  
+  [ 5 ] LITERAL [ 3 ] LITERAL +
+  [ 5 ] LITERAL [ 3 ] LITERAL -
+
+  [ 5 ] LITERAL [ 3 ] LITERAL *
+  [ 5 ] LITERAL [ -3 ] LITERAL *
+  [ -5 ] LITERAL [ 3 ] LITERAL *
+  [ -5 ] LITERAL [ -3 ] LITERAL *
+
+  [ 5 ] LITERAL [ 3 ] LITERAL /MOD
+  [ 5 ] LITERAL [ -3 ] LITERAL /MOD
+  [ -5 ] LITERAL [ 3 ] LITERAL /MOD
+  [ -5 ] LITERAL [ -3 ] LITERAL /MOD
+END
+
+run ARITHMETIC-TEST 
+
+DEFINE FIB ( n -- m)
+   DUP 1- 0= OVER 0= OR NOT
+   IF DUP 1- FIB SWAP 2- FIB + THEN
+END
+
+DEFINE FIB-TEST ( -- )
+  [ 8 ] LITERAL FIB
+END
+
+run FIB-TEST
+
+DEFINE FAC ( n -- n!)
+  DUP IF DUP 1- FAC * ELSE DROP 1 THEN
+END  
+
+DEFINE FAC-TEST ( -- )
+  [ 5 ] LITERAL FAC
+END
+  
+run FAC-TEST
+
+forth only

@@ -1,0 +1,73 @@
+.TH MEMORY 3X "August 1, 1990"
+.SH NAME
+memory \- tile kernel dynamic memory allocation functions
+.SH SYNOPSIS
+.B "memory"
+.SH DESCRIPTION
+The 
+.IR tile
+forth kernel support word set for dynamic memory allocation
+and reclaim from the run-time heap. Used by the kernel to
+allocate memory for tasks, entries, strings, etc.
+.TP
+.B
+code free ( addr -- )
+Returns an allocated block of memory back to the run-time heap.
+.TP
+.B
+code malloc ( bytes -- addr)
+Allocates a block of size "bytes" and returns a pointer to the
+memory area. Returns "nil" if the heap is saturated.
+.TP
+.B
+vocabulary memory ( -- )
+Vocabulary containing the heap management extension. Include
+into the vocabulary search set, "context", to allow access of this
+library.
+.TP
+.B
+code realloc ( bytes addr1 -- addr2)
+Resizes an allocated block on the heap. If the new size is
+larger than the grow size of the block a new block is
+allocated and the old blocks contains is copied and released
+back to the memory pool.
+.\" .SH INTERNALS
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. 
+The type and mode of the entries are indicated together with 
+their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

@@ -1,0 +1,92 @@
+THREADED INTERPRETIVE LANGUAGE ENVIRONMENT (TILE) INSTALLATION GUIDE
+
+RELEASE 2.1
+
+August 20, 1990
+
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+
+
+1.	INTRODUCTION
+
+To install the TILE forth environment create a directory with the 
+name "tile" and move all the "tile.kit" files to the new directory.
+The kit files should be packed up with the command "sh". A number
+of additional directories will be built. To compile the TILE forth
+application issue the command "make". The sequence of commands is:
+
+% mkdir tile
+% mv tile.kit.* tile
+% cd tile
+% sh tile.kit.01
+% ...
+% { sh tile.man.01 }
+% ...
+% make
+
+The "make" command will compile the forth environment. You can use
+the option "opt" to generate an optimized version. The standard make
+file in the source directory assumes that you are using GNU CC. Change
+or comment out the compiler definition line if you are using some
+other C compiler.
+
+
+2.	SEARCH PATHS
+
+The compiled forth application will be placed in the "tile/bin"
+directory. To gain access to it and the manual pages you should
+add the following section to your ".login" file. 
+
+setenv TILE $HOME/tile
+set path = ($path $TILE/bin)
+#
+setenv TILEPATH .:$TILE/lib:$TILE/tst
+setenv MANPATH $TILE/man:/usr/share/man
+
+
+3. 	GNU EMACS FORTH-MODE
+
+The programming environment is a forth-mode for GNU emacs. To make
+it available to emacs you must add the following definitions to your
+".emacs" file (or load the library "src/forth.el" manually in emacs 
+each time).
+
+;; *** Search path for directories to find files to load ***
+(set-variable 'load-path (append load-path '(nil "~/tile/scr")))
+
+;; *** TILE forth mode ***
+(setq forth-help-load-path '("~/tile/doc"))
+(autoload 'forth-mode "forth")
+(setq auto-mode-alist
+      (append '(("\\.tst$" . forth-mode) 
+		("\\.f83$" . forth-mode))
+	      auto-mode-alist))
+
+
+Depending on which directory you have used ($HOME or some system 
+directory) the directory specification will have to be changed. If
+correctly installed emacs will automatically load the forth-mode 
+on files with the extensions "f83" and "tst" and start the forth
+application in a sub-window. For more information about the
+forth-mode just give the command "M-X describe-mode" in emacs.
+
+
+4.	GNU EMACS HELP FILES
+
+If you have available the manual pages you should issue the following
+make command at the top directory (tile):
+
+% make help
+
+This command will process all the manual pages so that they may be
+used by the function help command (C-h) in the forth-mode in GNU
+Emacs.
+
+
+

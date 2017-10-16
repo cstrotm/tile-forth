@@ -1,0 +1,100 @@
+\
+\  INFIX CALCULATOR GRAMMAR DEFINITIONS
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 21 February 1990
+\
+\  Last updated on: 22 February 1990
+\
+\  Dependencies:
+\       (forth) forth, parser, bnf
+\
+\  Description:
+\       Infix notation grammar definitions and semantic binding.
+\       Translates infix notation to postfix (forth).
+\	Grammar defined using Extended Backus-Naur Form package.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Backus-Naur Form Infix Calculator definitions...) cr
+
+#include parser.f83
+#include bnf.f83
+
+parser forth definitions
+
+\ Exported calculator grammar symbol
+
+vocabulary calculator
+
+symbol calc
+
+parser calculator definitions
+
+\ Internal semantic actions
+
+: .number ( x -- )
+  . 					( Semantic action to show binding)
+;
+
+\ Internal grammar symbols
+
+symbol expr
+symbol $
+symbol term
+symbol expr0
+symbol expr1
+symbol -
+symbol +
+symbol fact
+symbol term0
+symbol *
+symbol /
+symbol mod
+symbol (
+symbol )
+
+\ Factorized and left-to-right execution grammar for expressions
+
+bnf interact
+
+<calc> ::= <expr> <eoln> @ calculator: .number	
+<expr> ::= <term> <expr0>
+<expr0> ::= <expr1> <expr0>
+         |  <empty> 
+<expr1> ::= - <term> @ forth: -
+	  |  + <term> @ forth: + 
+<term> ::= <fact> <term0> 
+<term0> ::= * <term> @ forth: * 
+	 |  / <term> @ forth: / 
+         |  mod <term> @ forth: mod 
+	 |  <empty> 
+<fact> ::= ( <expr> ) 
+        |  - <fact> @ forth: negate 
+	|  <number> 
+
+forth
+
+forth only

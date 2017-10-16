@@ -1,0 +1,233 @@
+.TH TILE 1 "August 16, 1990" "Version 3.33"
+.SH NAME
+tile \- c based forth-83 standard compiler and programming environment
+.SH SYNOPSIS
+.B forth
+.RB "[\|" \-dpru
+.IR size "\|]"
+.RI "[\|" file " .\|.\|.\|]"
+.RB "[\|" \-a
+.IR argument " .\|.\|.\|]"
+.br
+.B forth
+.RB "[\|" \-dpru 
+.IR size "\|]"
+.RI "[\|" file " .\|.\|.\|]"
+.RB "[\|" \-s
+.IR start-symbol "\|]"
+.RI "[\|" argument " .\|.\|.\|]"
+.SH DESCRIPTION
+.I forth
+uses a command syntax much like a compiler. The 
+.I file
+arguments are loaded before the interaction top loop is started. A
+.I start\-symbol
+may also be given as an argument making
+.I forth
+act as a `compile-and-go' compiler of applications. Any extra 
+options or parameters passed to 
+.I forth 
+may be accessed by the application. As extensions of the Forth-83 Standard
+.I forth
+supports floating point numbers, strings, multi-tasking, exceptions, 
+private definitions, argument binding and local variables and much more. 
+Written in C the kernel may be used as a general purpose environment 
+for interactive testing and development of C-code.
+.LP
+To provide an interactive programming environment for developing programs
+.I forth
+may be run as a sub-process to GNU Emacs in a specialized
+.I forth\-mode.
+Source code may be edited and directly tested by passing either
+a paragraph of code or a whole buffer to 
+.I forth
+from Emacs. The 
+.I forth\-mode
+also supports documentation retrieval and automatic indentation of
+forth code, comments and definitions.
+.LP
+An environment variable is used to specify file search paths and
+support management of libraries of source code.
+.I forth
+compiles faster than most compilers link with approx. 70.000 lines per
+minute on a SUN-3/60 (and over 200.000 on a SUN-SPARCstation 1).
+Code is only saved in source form. 
+Loading all available library code takes less than a second.
+.SH OPTIONS
+.TP 
+.BI \-d "dictionary-size "
+Size of dictionary in bytes. Default allocation is 1024K bytes.
+.TP
+.BI \-p "parameters-stack-size "
+Size of foreground process parameter stack in cells (32-bits). 
+Default allocation is 256 cells.
+.TP
+.BI \-r "return-stack-size "
+Size of foreground process return stack in cells (32-bits). 
+Default allocation is 256 cells.
+.TP
+.BI \-u "user-area-size "
+Size of foreground process user area in bytes.
+Default allocation is 1024 bytes.
+.TP
+.BI \-a " argument .\|.\|."
+Allows access of the rest of the arguments. The first arguments is the string
+.I forth\. 
+.TP
+.BI \-s " start-symbol "
+Defines the symbol to be used instead of the normal interaction top-loop. 
+The
+.I start\-symbol
+becomes the first argument and any further arguments may be accessed by the
+application. The library contains some examples of argument fetching functions.
+.SH LIBRARIES
+The
+.I tile
+environment consists currently of five directories with C kernel source, 
+forth-83 source library, test and example code, manuals and documentation. 
+The directory
+.I src
+contains all the C-level code and the GNU emacs programming environment.
+The directory
+.I lib
+contains Forth-83 source code modules, consisting of a number of
+data modelling, and debugging tools, and high level multi-tasking 
+constructs such as semaphores, channels, rendezvous and task types. 
+Documentation of the source code and the kernel are found in the 
+directory
+.I man
+and in the directory
+.I doc.
+These are use for handling manual commands or documentation search in
+the programming environment (in GNU emacs). Test programs for each 
+forth-83 source library code may be found in the directory
+.I tst.
+.SH FILES
+.PD 0
+.TP 20
+.B file.f83
+Forth-83 source input file
+.TP
+.B file.tst
+Forth-83 source test file
+.TP
+.B file.3
+Forth-83 source manual pages
+.TP
+.B file.doc
+Forth-83 source documentation file
+.TP
+.B kernel.c..h..v
+multi-tasking c based Forth-83 kernel and extension vocabularies
+.TP
+.B error.c..h
+error management package
+.TP
+.B io.c..h
+multi-tasking input package
+.TP
+.B memory.c..h
+memory management package
+.TP
+.B forth.c
+this application
+.TP
+.B forth.el
+GNU Emacs forth-mode source
+.TP
+.B tile.1
+this manual
+.TP
+.B Makefile
+puts the forth application together
+.PD
+.SH ENVIRONMENT
+.TP 20
+.B TILE
+Path for the tile directory structure. A normal setting for a single
+user is `$HOME/tile'.
+.TP
+.B TILEPATH
+Search path for library source files. A normal setting is 
+`$TILE/lib:$TILE/tst' which will allow the file include
+function in 
+.I forth
+to locate library source files in the current directory ($PWD), the
+standard library, and the test code library. 
+.I forth
+also looks for files at your home directory ($HOME).
+.TP
+.B MANPATH
+Search path for manual source files. Used by
+.I man
+for access of manual pages. Setting this environment variable to
+`$TILE/man:/usr/share/man' will allow you to read the 
+.I forth 
+manual pages.
+.SH GNU EMACS FORTH MODE
+The GNU Emacs forth-mode supports interactive programming, automatic 
+indentation of source code, and documentation search of the
+.I forth
+kernel and library within Emacs. To allow automatic loading of the
+mode your
+.I .emacs
+file should contain the following definitions;
+.LP
+.br
+  (set-variable 'load-path
+                (append load-path
+                        '(nil "~/tile")))
+.br
+  (setq forth-help-load-path '(nil "~/tile/doc"))
+.br
+  (setq auto-mode-alist
+.br
+        (append '(("\\\\.tst$" . forth-mode)
+.br
+		  	  ("\\\\.f83$" . forth-mode))
+.br
+			  auto-mode-alist))
+.br
+  (autoload 'forth-mode "forth")
+.LP
+Further documentation about the 
+.I forth\-mode
+may be found by giving the command `M-x describe-mode' in Emacs. 
+.SH BUGS
+Bugs should be reported to mip@ida.liu.se. Bugs tend actually to be
+fixed if they can be isolated, so it is in your interest to report them
+in such a way that they can be easily reproduced according to
+get newer version.
+.SH COPYING
+Copyright (C) 1989-90 Mikael R.K. Patel
+.br
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.br
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.br
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHORS
+Mikael R.K. Patel
+.br
+Computer Aided Design Laboratory (CADLAB)
+.br
+Department of Computer and Information Science
+.br
+Linkoping University
+.br
+S-581 83 LINKOPING
+.br
+SWEDEN
+.br
+Email: mip@ida.liu.se

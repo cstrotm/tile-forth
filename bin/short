@@ -1,0 +1,37 @@
+#! /bin/sh
+# NAME
+#	short - a short description of available definitions in a tile file
+# SYNOPSIS
+#	short <file>
+# DESCRIPTION
+#	Gives all the defininition lines in a tile forth source file.
+#	
+# OPTIONS
+#	none
+# SEE ALSO
+#	tile(1), grep(1)
+# AUTHOR
+#	Mikael R.K. Patel
+#	Computer Aided Design Laboratory (CADLAB)
+#	Department of Computer and Information Science
+#	Linkoping University
+#	S-581 83 LINKOPING
+#	SWEDEN
+#	Email: mip@ida.liu.se
+# HISTORY
+# 	Created on: 	02 June 1990
+#	Lasted updated:	13 August 1990
+
+if [ "$1" = "" ]
+then
+	echo "Usage:  short file ..."
+else
+	for file in $*
+	do	
+		echo "Definitions in: $file"
+		egrep " \-\- |^;" $file | \
+		egrep -v "does|exception|block\[ \("
+		echo
+	done
+fi
+

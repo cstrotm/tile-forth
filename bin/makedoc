@@ -1,0 +1,36 @@
+#! /bin/sh
+# NAME
+#	makedoc - create documenation file from manual pages
+# SYNOPSIS
+#	makedoc <files>
+# DESCRIPTION
+#	Creates documentation (text) files from manual pages.
+#       The documentation files are used by help function mode
+#       in GNU Emacs (for the tile forth environment).
+# OPTIONS
+#	none
+# SEE ALSO
+#	nroff(1), tr(1).
+# AUTHOR
+#	Mikael R.K. Patel
+#	Computer Aided Design Laboratory (CADLAB)
+#	Department of Computer and Information Science
+#	Linkoping University
+#	S-581 83 LINKOPING
+#	SWEDEN
+#	Email: mip@ida.liu.se
+# HISTORY
+# 	Created on: 	20 June 1990
+#	Lasted updated:	13 August 1990
+
+if [ "$1" = "" ]
+then
+	echo "Usage:  makedoc file ..."
+else
+	for file in $*
+	do	
+		nroff -man $file | tr -d "_\010" > $file.doc
+	done
+fi
+
+

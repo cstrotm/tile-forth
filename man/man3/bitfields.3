@@ -1,0 +1,215 @@
+.TH BITFIELDS 3X "August 1, 1990"
+.SH NAME
+bitfields \- bit field manipulation library
+.SH SYNOPSIS
+.B "#include bitfields.f83"
+.LP
+.B bitfields
+.SH DESCRIPTION
+Allows definition and manipulation of bit fields. The bit field
+is described in a syntax similar to a structure with fields
+from the least significant bit towards the most significant bit. 
+The bit field value is manipulated on the data stack and is therefore
+limited to the width of the stack, i.e., 32-bits. The kernel supports 
+the bit field library with five functions; "b@", "b!", "f@", "<f@" 
+and "f!". These allow high performance manipulation of stack 
+oriented bit field data. The functions are also defined in forth for 
+other environments.
+.TP
+.B 
+vocabulary bitfields ( -- )
+Vocabulary for bit field definitions. Include into the search path,
+"context", to allow definition and usage of the bit field library.
+.TP
+.B 
+: bitfield.type ( -- )
+Marks the beginning of a bit field type structure. Used in the following
+form:
+.br
+.B bitfield.type
+.I <bitfield-type-name>
+.B ( -- )
+.br
+.I { <bitfield-name> }
+.br
+.B bitfield.end
+.br
+and to a create bit field variables:
+.br
+.B <bitfield-type-name>
+.I <bitfield-variable-name>
+.B ( -- addr)
+.br
+The bits within the bit field are numbered from 0 to 31 starting 
+from right (lsb) to left (msb). The 
+.I <bitfield-name>
+may be generated with the words "bit", "bits", "byte", "nibble", 
+and, "word" to define the bit field names.
+.TP
+.B 
+: bits ( width -- )
+Used in the following form:
+.br
+.I <width> 
+.B bits
+.I <bitfield-name>
+.B ( -- pos width)
+.br
+within a bit field type definition to define field name for an
+arbitrary set of bits.
+.TP
+.B 
+bitfield.field bit ( -- )
+Used in the following form:
+.br
+.B bit
+.I <bitfield-name>
+.B ( -- pos width)
+.br
+within a bit field type layout definition section to give name to a bit 
+at the current position. The bit positions are numbered from 0 to 31 
+and right to left within a long number.
+.TP
+.B 
+bitfield.field nibble ( -- )
+Used in the following form:
+.br
+.B nibble
+.I <bitfield-name>
+.B ( -- pos width)
+.br
+within a bit field type layout section definition to give name to
+a nibble (four bits).
+.TP
+.B 
+bitfield.field byte ( -- )
+Used in the following form:
+.br
+.B byte
+.I <bitfield-name>
+.B ( -- pos width)
+.br
+within a bit field type layout section definition to give name to
+a byte (eight bits).
+.TP
+.B 
+bitfield.field word ( -- )
+Used in the following form:
+.br
+.B word
+.I <bitfield-name>
+.B ( -- pos width)
+.br
+within a bit field type layout section definition to give name to
+a word (sixteen bits).
+.TP
+.B 
+: bitfield.end ( -- )
+Ends the definition of a bit field type. Will give a warning
+message if the last field position exceeded 32 bits.
+.SH INTERNALS 
+The
+.IR bitfields
+vocabulary contains the following private definitions to allow 
+definition of fields.
+.TP
+.B 
+: bitfield.field ( width -- ) private
+Utility function to create additional constant bit field type
+names, other than "bit", "byte", etc.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.SH EXAMPLES
+To create an object pointer bit field structure with fields for
+type and pointer:
+.RS
+.LP
+.nf
+.B 
+#include bitfields.f83
+.B 
+#include enumerates.f83
+.LP
+.B 
+bitfields enumerates
+.LP
+.B 
+bitfield.type OBJECT ( -- )
+.B 
+	2  bits TYPE ( -- pos width)
+.B
+	30 bits VALUE ( -- pos width)
+.B
+bitfield.end
+.fi
+.RE
+.LP
+Create an object pointer, access and manipulate its value:
+.RS
+.LP
+.nf
+.B
+enum.type PRIMITIVE-CLASS ( -- )
+.B
+	enum SMALL-NUMBER ( -- enum)
+.B
+	enum BLOCK-POINTER ( -- enum)
+.B
+	enum OBJECT-HANDLE ( -- enum)
+.B
+	enum PRIMITIVE ( -- enum)
+.B 
+enum.end
+.LP
+.B 
+OBJECT x ( -- addr)
+.LP
+.B
+SMALL-NUMBER 0 TYPE f! ( -- 0 | SMALL-NUMBER)
+.B
+42 swap VALUE f! ( -- 42 | SMALL-NUMBER)
+.B
+x !
+.fi
+.RE
+.SH NOTE
+The function list is sorted in logical order.
+The type and mode of the entries are indicated together with their
+parameter stack effect.
+.PP
+The bit field definitions require a 32-bit cell size. This library
+may only be directly ported to other 32-bit implementations of the
+Forth-83 Standard.
+.\" .SH WARNING 
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

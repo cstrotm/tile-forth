@@ -1,0 +1,357 @@
+.TH OBJECTS 3X "September 3, 1990"
+.SH NAME
+objects \- object oriented programming extension
+.SH SYNOPSIS
+.B "#include objects.f83"
+.LP
+.B "objects"
+.SH DESCRIPTION
+This library realizes the popular class-instance model of object oriented
+programming. The "world" is divided into classes and instances. The classes
+hold all common information for the instances. This information is the
+instance variable fields and the messages an instance can answer. The
+answer of a message is called a method. A method may call the super class
+implementation of a message with the prefix word "super". This creates
+a static binding of the message to the super class. A messages require
+the object as the top most parameter stack element and will locate an
+appropriate method at run-time (late-binding).
+.TP
+.B
+: .class ( object -- )
+Displays the name of the class of an object on the current output stream.
+.TP
+.B
+: .message ( message -- )
+Displays the name of the message on the current output stream. May be used
+by the error message "doesNotUnderstand" which receives a message as 
+parameter.
+.TP
+.B
+: align ( -- )  
+Instance variable layout control word. Used to align the next field
+to an even byte boundary within the definition section of a class.
+.TP
+.B
+: basicInstanceSize ( class -- num)
+Returns the instance size in bytes.
+.TP
+.B
+subclass.field byte ( -- )
+Used within the instance variable section of a class definition to
+create a byte field name.
+.br
+.B byte 
+.I <name>
+.B ( object -- addr)
+.br 
+The field will require an object and will return the address of the
+byte within the object.
+.TP
+.B
+: bytes ( size -- )  
+Used within the instance variable section of a class definition to
+create a byte vector field name.
+.br
+.I <size>
+.B bytes
+.I <name>
+.B ( object -- addr)
+.br 
+The field will require an object and will return the address of the
+byte vector within the object.
+.TP
+.B
+: canUnderstand ( message class -- bool)
+Returns "true" if the class can understand the message (there exists
+a method) else "false".
+.TP
+.B
+: class ( object -- addr)
+Returns the class address for the object. The class is implemented as a 
+prototype.
+.TP
+.B
+: dispose-instance ( object -- )
+Used in the following form:
+.br
+.I <object>
+.B dispose-instance
+.B ( -- )
+.br
+to reclaim memory allocated for an object. The object should not be
+accessed after this functions. Only objects allocated with the word
+"new-instance" may be reclaimed. Objects created with the word
+"instance" should be regarded as global variables. 
+.TP
+.B
+forward doesNotUnderstand ( message object -- )
+Forward declared error message. Sent to an object when the message lookup 
+mechanism fails. May be used to implement "proxy" objects. 
+.TP
+.B
+subclass.field enum ( -- )
+Used within the instance variable section of a class definition to
+create a enumerate field name. 
+.br
+.B enum
+.I <name>
+.B ( object -- addr)
+.br 
+The field will require an object and will return the address of the
+enumerate within the object.
+.TP
+.B
+forward initiate ( ... object -- )
+This word is called by "new-instance" and "instance" and should be
+a message used to initiate the newly created object.
+.TP
+.B
+: instance ( class -- )
+Used in the following form:
+.br
+.I <class>
+.B instance
+.I <name>
+.B ( -- object)
+.br
+to create a named instance of a class. The message "initiate" is send
+to the newly created instance. This message must be answered.
+.TP
+.B
+subclass.field long ( -- )
+Used within the instance variable section of a class definition to
+create a long integer field name. 
+.br
+.B long
+.I <name>
+.B ( object -- addr)
+.br 
+The field will require an object and will return the address of the
+long integer within the object.
+.TP
+.B
+: message ( -- )
+Used in the following form:
+.br
+.B message
+.I <name>
+.B ( ... object -- ... )
+.br
+to create a message. The message may be passed to an object as a normal
+function call. The top most parameter is always required to be an object.
+A method for the message is located at run-time giving late binding,
+and polymorphism.
+.TP
+.B
+: method ( -- )
+Used in the following form within the definition section of a class:
+.br
+.B method
+.I <message>
+.B ( ... object -- ...)
+.B ...
+.B ;
+.br
+to define a method for the message. The method will receive the object, self, 
+as the first parameter. To pass the message to the superclass the message
+prefix word "super" may be used. This is common practice in object oriented
+programming. The method definition should not contain the words "recurse",
+"tail-recurse", and "exception>" as these require an entry binding.
+.TP
+.B
+: new-instance ( class -- object)
+Used in the following form:
+.br
+.I <class>
+.B new-instance
+.B ( -- object)
+.br
+to create an instance of a class. The message "initiate" is sent
+to the newly created instance. This message must be answered or the
+error message "doesNotUnderstand" is sent to the instance. The object
+may be reclaimed with the word "dispose-instance". 
+.TP
+.B
+vocabulary objects ( -- )
+The object oriented extension vocabulary. Include to the vocabulary
+search set, "context", to allow programming in the object oriented programming paradigm.
+.TP
+.B
+subclass.field ptr  ( -- )
+Used within the instance variable section of a class definition to
+create a pointer field name. 
+.br
+.B ptr
+.I <name>
+.B ( object -- addr)
+.br 
+The field will require an object and will return the address of the
+pointer field within the object.
+.TP
+.B
+: send ( object message class -- object)
+Primitive message sending function. Used by the normal message-passing,
+"message", mechanism to locate and apply a method. 
+.TP
+.B
+: subclass ( superclass -- )
+Used in the following form:
+.br
+.I <class>
+.B subclass
+.I <name>
+.br
+.I { <instance-variable-field> }
+.br
+.I { <method> }
+.br
+.B subclass.end
+.br
+to initiate the definition of a class. This definition should contain
+two major sections; the instance variable fields, and the instance
+methods. All field names will become local to the class. The words
+"byte", "bytes", "enum", "word", "long" and "ptr" should be used to
+create instance variable field names. These will require an object 
+pointer and will return the address of the corresponding field. The
+field should then be manipulated with the memory access functions.
+The word "align" may be used before a field name definition to align
+it to an even byte boundary. The method definition section
+may contain implementations of messages. A method may be viewed as a
+normal colon definition with the extension that many definitions, methods,
+for the same name, message, may exist simultaneous and the selection is 
+performed at run-time (late binding). The method should always receive
+the object, self, as the top most parameter. The message prefix word
+"super" may be used to call the super class implementation of a 
+method. This binding is static. The word "this-class" may be used to
+access the current class. The method may not use the words "recurse", 
+"tail-recurse", and "exceptions>" as these require an entry binding.
+.TP
+.B
+: subclass.end ( -- )
+Used in the following form:
+.br
+.I <class>
+.B subclass
+.I <name>
+.br
+.I { <instance-variable-field> }
+.br
+.I { <method> }
+.br
+.B subclass.end
+.br
+to finish the definition of a class. Additional methods and fields 
+should not be defined after this word.
+.TP
+.B
+: super ( -- ) immediate compilation 
+Used in the following form within a method definition:
+.br
+.B super
+.I <message>
+.br
+to call a method for a message in the superclass. This word should 
+only be used inside of method definitions.
+.TP
+.B
+: superclass ( class1 -- class2)
+Returns the address super class of the class. The value is "nil" for
+a root class.
+.TP
+.B
+: this-class ( -- class) immediate
+Returns the address of the current definitions class. Will return "nil"
+outside of a class definition.
+.TP
+.B
+subclass.field word ( -- )
+Used within the instance variable definition section of a class to
+create a word integer field name. 
+.br
+.B word
+.I <name>
+.B ( object -- addr)
+.br 
+The field will require an object and will return the address of the
+word integer within the object.
+.SH INTERNALS
+Private definitions in the 
+.I objects
+vocabulary;
+.TP
+.B
+: allot-instance ( class -- object) private
+Used in the following form:
+.br
+.I <class>
+.B allot-instance
+.B ( -- object)
+.br
+to create an instance of a class. The message "initiate" is sent
+to the newly created instance. This message must be answered or the
+error message "doesNotUnderstand" is sent to the instance. The object
+is allocated from the dictionary area.
+.TP
+.B 
+slot instance-size: ( class -- num) private
+Slot for a class (prototype) containing the number of byte for an instance
+of this class.
+.TP
+.B
+slot instance-variables: ( class -- entry) private
+Slot for a class (prototype) containing a pointer to the last defined
+instance variable field entry. The list of variables is terminated
+by the class itself.
+.TP
+.B
+: subclass.field ( size -- ) private
+Use to create instance variable field type names. These field types 
+should only be used within a class definition.
+.TP
+.B
+variable the-class ( -- addr) private
+Used within a class definition section to access the address of the 
+current definition class. Outside of the definition section the variable
+will have the value "nil".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR prototypes(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the
+entries are indicated together with their parameter stack effect.
+.SH WARNING
+This library contains forward declared words which should be supplied.
+Check that your definitions vocabulary comes before the "objects" 
+vocabulary when defining these words. 
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

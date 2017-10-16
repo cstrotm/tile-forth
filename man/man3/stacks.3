@@ -1,0 +1,164 @@
+.TH STACKS 3X "August 1, 1990"
+.SH NAME
+stacks \- vector representation of stacks
+.SH SYNOPSIS
+.B "#include stacks.f83"
+.LP
+.B "stacks"
+.SH DESCRIPTION
+Library for stacks represented as a vector. This library allows definition
+and manipulation of "cell" width stacks. Provides functions for overflow
+and empty checking. Applications are required to check stack consistency
+with these functions.
+.TP
+.B
+: .stack ( stack -- )
+Displays the contents of a stack in the following form:
+.br
+.B stack#
+.I <stack-address>
+.B [ 
+.I <stack-depth>
+.B ] /
+.I <top>
+.B / ... /
+.I <bottom>
+.B
+.TP
+.B
+: ?empty-stack ( stack -- bool)  
+Returns "true" if the stack is empty else "false".
+.TP
+.B
+: ?full-stack ( stack -- bool)  
+Returns "true" if the stack is full else "false".
+.TP
+.B
+: ?map-stack ( stack block[element -- bool] -- )
+Conditional iterator for stacks. The parameter conditional block
+on each element on the stack starting with the top of stack and
+preceding towards the bottom of the stack. The conditional block
+should return a boolean flag for each call. The iterator is terminated
+when the block returns "true".
+.TP
+.B
+struct.type STACK ( size -- )
+Used in the following form:
+.br
+.I <size>
+.B STACK
+.I <stack-name>
+.B ( -- stack)
+.br
+to create a stack variable. May also be used to create a unnamed stack
+instance with the "structures" library function "new-struct". In this
+case include the "structures" library and use the following form:
+.br
+.I <size> 
+.B new-struct STACK ( -- stack)
+.br
+The top of stack pointer is stored first in the "STACK" structure. 
+.br
+.I <stack>
+.B @ @ ( -- element)
+.br
+This allows the top of stack element to be accessed indirectly through 
+the stack variable. This action will copy the top of the stack to
+the forth parameter stack and not effect the internal stack pointers.
+.TP
+.B
+: depth-stack ( stack -- num)  
+Returns the stack depth. The return value represents the number of
+"pop" call that may be performed before the stack is empty.
+.TP
+.B
+: empty-stack ( stack -- )
+Removes all elements from the stack by putting the stack top to be the
+stack bottom. The stack depth becomes zero and the stack becomes empty.
+.TP
+.B
+: map-stack ( stack block[element -- ] -- )
+Stack iterator function. Calls the parameter block for each element
+in the stack starting with the top of stack and continues towards the
+bottom of the stack.
+.TP
+.B
+: pop ( stack -- element) 
+Removes the top element for the stack and returns this value. This
+function will not check if the stack is empty. Applying this function
+on an empty stack will leave the stack in an error state. 
+.TP
+.B
+: push ( element stack -- )  
+Appends the element to the top of the stack. This function will not
+check if the stack is full. Applying this function on an empty stack will
+leave the stack in an error state.
+.TP
+.B
+: size-stack ( stack -- num)
+Return the maximum number of elements that the stack can contain.
+.TP
+.B
+vocabulary stacks ( -- )
+Vocabulary containing the stack extensions. Include into the vocabulary
+search structure, "context", to allow access of this library.
+.SH INTERNALS
+Private definitions in the 
+.I stacks
+vocabulary;
+.TP
+.B
+ptr +top ( stack -- addr) private
+Access field in "STACK" structure to pointer to top of stack.
+.TP
+.B
+long +bytes ( stack -- addr) private
+Access field in "STACK" structure to size of stack area in bytes.
+The total size of a stack in bytes is the sum of the "STACK"
+structure and this field. The size of the "STACK" header may be
+accessed with the function "sizeof" in the "structures" library.
+.TP
+.B
+ptr +bottom ( stack --- addr) private
+Access field in "STACK" structure to pointer to bottom of stack.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR structures(3X),
+.IR blocks(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if
+

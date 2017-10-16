@@ -1,0 +1,185 @@
+\
+\  FORTH DEBUGGER DEFINITIONS
+\
+\  Copyright (C) 1988-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 30 June 1988
+\
+\  Last updated on: 6 August 1990
+\
+\  Dependencies:
+\       (forth) forth, string, compiler, structures, blocks, lists
+\
+\  Description:
+\       Basic debugging function built on a general advice function
+\       management. Allows black-box tracing, break points and
+\       colon definitions call profiling. The break point command
+\       loop is a copy of interpret and a set of commands for
+\       investigating the state of the program may be used.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Debugger definitions...) cr
+
+#include internals.f83
+#include blocks.f83
+#include lists.f83
+#include structures.f83
+
+vocabulary debugger ( -- )
+
+blocks structures lists string compiler forth debugger definitions
+
+struct.type ADVICE ( -- ) private
+  ptr +block ( advice -- addr) private
+  ptr +entry ( advice -- addr) private
+  ptr +advice ( advice -- addr) private
+  long +profile ( advice -- addr) private
+struct.end
+
+: [advice] ( advice -- )
+  dup +advice @ execute
+; private
+
+: .s ( -- )
+  ." [" depth 0 .r ." ] "
+  depth 5 > if ." \... " then
+  depth 5 min 0 swap ?do ." \" i pick . -1 +loop
+;
+
+: [colon] ( advice -- )
+  1 over +profile +!
+  +block @ call
+; private
+
+: [trace] ( advice -- )
+  ." --> " dup >r +entry @ .name .s cr
+  r@ [colon]
+  ." <-- " r> +entry @ .name .s cr
+; private
+
+: *abort* ( -- )
+  r> drop
+  .s ." Abort: " r> +entry @ .name cr
+  abort
+;
+
+: *return* ( -- )
+  r> drop
+  .s ." Return: " r> +entry @ .name cr
+;
+
+: *call* ( -- )
+  r> drop
+  .s ." Call: " r@ +entry @ .name cr
+  r@ [colon]
+  .s ." Return: " r> +entry @ .name cr
+;
+  
+: *execute* ( -- )
+  .s ." Execute: "
+  r> r@ swap >r
+  dup +entry @ .name cr
+  [colon]
+  r> r@ swap >r >r
+  .s ." Break: " r> +entry @ .name cr
+;
+
+: *profile* ( -- )
+  .s ." Profile: "
+  r> r@ swap >r
+  dup +entry @ .name space ." calls: " +profile @ . cr
+;
+
+: [break] ( advice -- )
+  >r .s ." Break: " r@ +entry @ .name cr
+  begin
+    32 word
+    find ?dup
+    if compiling = 
+      if thread else execute then
+    else
+      recognize
+      if [compile] literal
+      else
+	$print abort" ?? Break Point Aborted"
+      then
+    then
+  again
+; private
+
+: tail-recurse ( -- )
+  compile (branch)
+  last >body +block @ <resolve
+; compilation immediate
+
+: ?advice ( entry -- bool)
+  +code @ ['] [advice] >body =
+;
+
+: advice ( action -- )
+  ' dup ?advice not
+  abort" advice: not an adviced definition"
+  >body 0 over +profile ! +advice !
+;
+
+: colon ( -- )
+  ['] [colon] advice
+;
+
+: trace ( -- )
+  ['] [trace] advice
+;
+
+: break ( -- )
+  ['] [break] advice
+;
+
+: .profile ( -- )
+  5 spaces ." Calls"
+  1 spaces ." Function" cr
+  last
+  block[ ( entry -- )
+    dup ?advice
+    if dup >body +profile @
+      10 .r space
+      .name cr
+    else
+      drop
+    then
+  ]; map-list
+;
+
+: : ( -- )
+  :
+  new-struct ADVICE
+  dup last +parameter !
+  ['] [advice] >body last +code !
+  last over +entry !
+  ['] [colon] over +advice !
+  0 over +profile !
+  here swap +block !
+;
+
+forth only

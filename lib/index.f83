@@ -1,0 +1,90 @@
+.( Loading Source Index definitions...) cr
+
+\ Filter for the result from 'grep' on definition lines in forth-83
+\ source code. Assumes the syntax:
+\ 	<filename> <type> <entryname> <stackcomment>
+\ and will reorder the symbols to the following form:
+\	<entryname> <stackcomment> <filename>
+\ The <filename> contains the directory, file, and source code line.
+
+string forth definitions
+
+\ String variables for scanned symbols
+
+128 constant file-name-size ( -- num)
+create file-name ( -- str) file-name-size allot
+
+128 constant entry-name-size ( -- num)
+create entry-name ( -- str) entry-name-size allot
+
+128 constant stack-comment-size ( -- num)
+create stack-comment ( -- str) stack-comment-size allot
+
+\ Utility string functions
+
+: $assign ( str1 str2 -- )
+  0 over c! $cat
+;
+
+: $more ( str -- bool)
+  c@
+;
+
+\ Scanning functions for file and entry name, and stack comment
+\ Build the corresponding output symbols
+
+: scan-file-name ( -- )
+  32 word
+  dup c@ 
+  if dup
+    begin 1+ dup c@ ascii : = until
+    begin 1+ dup c@ ascii : = until
+    0 swap c!
+  then
+  file-name $assign
+;
+
+: scan-entry-name ( -- )
+  ascii ( word
+  dup >r
+  dup $length +
+  begin 1- dup c@ 32 = not over r@ = or until
+  0 over 1+ c!
+  dup r@ >
+  if begin dup c@ 32 = over r@ = or not while 1- repeat
+    dup c@ 32 = if 1+ then
+  then
+  entry-name $assign
+  r> drop
+;
+
+: scan-stack-comment ( -- )
+  " ( " stack-comment $assign
+  ascii ) word stack-comment $cat
+  " )" stack-comment $cat
+;
+
+: scan-end-of-line ( -- )
+  begin key 10 = until
+;
+
+\ Index generation function. The application start symbol
+
+: index ( -- )
+  begin
+    scan-file-name
+    file-name $more
+  while
+    scan-entry-name
+    entry-name $more
+    if scan-stack-comment
+      entry-name $print space
+      stack-comment $print space
+      file-name $print cr
+    then
+    scan-end-of-line
+  repeat
+;
+
+
+forth only

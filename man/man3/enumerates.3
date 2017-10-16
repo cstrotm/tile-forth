@@ -1,0 +1,151 @@
+.TH ENUMERATES 3X "August 6, 1990"
+.SH NAME
+enumerates \- enumerate variable definitions
+.SH SYNOPSIS
+.B "#include enumerates.f83"
+.LP
+.B enumerates
+.SH DESCRIPTION
+Allows definition of enumerate variable sets. Creates constants with
+the values zero and upwards.
+.TP
+.B 
+: >enum ( enum -- entry) immediate
+Used in the following form:
+.br
+.I <enum-item-value> 
+.B >enum 
+.I <enum-type-name>
+.B ( enum -- entry)
+.br
+to map an enumerate value back to its corresponding entry. If the entry
+is not found "nil" returned. The enumerate type maintains a pointer to
+the list of defined enumerates.
+.TP
+.B 
+: enum ( -- )
+Used within an "enum.type" definition to declare an enumerate.
+.br
+.B enum 
+.I <enum-item-name>
+.B ( -- enum)
+.br
+The value of the items are zero and upwards.
+.TP
+.B 
+: enum.end ( -- )
+Used in the following structure:
+.br
+.B enum.type
+.I <enum-type-name>
+.br
+.I {
+.B enum 
+.I <enum-item-name>
+.B ( -- enum)
+.I }
+.br
+.B enum.end
+.br
+to terminate a "enum.type" definition.
+.TP
+.B 
+: enum.type ( -- )
+Used in the following structure:
+.br
+.B enum.type
+.I <enum-type-name>
+.B ( -- )
+.br
+.I { 
+.B enum
+.I <enum-item-name> 
+.B ( -- enum)
+.I }
+.br
+.B enum.end
+.br
+to start the definition of an enumerate variable and identifiers. 
+The items start with the value zero. The type may later be used 
+to define variables:
+.br
+.B <enum-type-name> 
+.I <enum-variable-name>
+.B "( -- addr)"
+.br
+The enumerate variable corresponds to a normal forth "variable" and
+may be accessed with the functions "@" and "!".
+.TP
+.B 
+vocabulary enumerates ( -- )
+Vocabulary for enumerate definitions. Include into the search set,
+"context", to allow access to this language extension.
+.SH INTERNALS
+Private definitions in the 
+.I enumerates
+vocabulary;
+.TP
+.B 
+: (>enum) ( enum enum.type -- entry) private
+Performs the run-time action of locating an enumerate entry given
+it's value, "enum", and the enumerate type it is a member of, 
+"enum.type". Compiled by the word ">enum".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X).
+.SH EXAMPLES
+The
+.I tile
+forth kernel entries have the following code types:
+.RS
+.LP
+.nf
+.B enum.type CODES ( -- )
+.B 	enum CODE ( -- enum)
+.B 	enum COLON ( -- enum)
+.B 	enum VARIABLE ( -- enum)
+.B 	enum CONSTANT ( -- enum)
+.B 	enum VOCABULARY ( -- enum)
+.B 	enum CREATE ( -- enum)
+.B 	enum USER ( -- enum)
+.B 	enum LOCAL ( -- enum)
+.B 	enum FORWARD ( -- enum)
+.B 	enum FIELD ( -- enum)
+.B 	enum EXCEPTION ( -- enum)
+.B enum.end
+.fi
+.RE
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the
+entry is indicated together with the parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

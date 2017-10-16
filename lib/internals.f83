@@ -1,0 +1,129 @@
+\
+\  INTERNAL TILE FORTH DATA STRUCTURES
+\
+\  Copyright (C) 1988-1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 30 June 1988
+\
+\  Last updated on: 27 July 1990
+\
+\  Dependencies:
+\       (forth) forth, string, enumerates, bitfields, structures,
+\               blocks, lists, sets
+\
+\  Description:
+\       High level extensions to the forth kernel. Implementation
+\       dependent sections such as entry and vocabulary structures.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Internal definitions...) cr
+
+#include enumerates.f83
+#include bitfields.f83
+#include structures.f83
+#include blocks.f83
+#include lists.f83
+#include sets.f83
+
+sets lists blocks bitfields structures enumerates string forth definitions
+
+( Memory word size and integer range)
+
+8                      constant BITS/BYTE ( -- int)
+cell                   constant BYTES/WORD ( -- int)
+BYTES/WORD BITS/BYTE * constant BITS/WORD ( -- int)
+
+1 BITS/WORD 1- << constant MIN_INT ( -- int)
+MIN_INT 1-        constant MAX_INT ( -- int)
+
+( Entry and vocabulary structures)
+
+struct.type ENTRY ( -- )
+  ptr  +link ( entry -- addr)		( Pointer to previous entry)
+  ptr  +name ( entry -- addr)		( Pointer to null-ended string)
+  long +mode ( entry -- addr)		( Mode bit field)
+  long +code ( entry -- addr)		( Code type or pointer to code)
+  long +parameter ( entry -- addr)	( Parameter field or pointer to dito)
+struct.end
+
+bitfield.type ENTRY-MODES ( -- )
+  bit  IMMEDIATE ( -- pos width)	( Execution always)
+  bit  EXECUTION ( -- pos width)	( Execution only)
+  bit  COMPILATION ( -- pos width)	( Compilation only)
+  bit  PRIVATE ( -- pos width)		( Private only)
+4 bits RESERVED ( -- pos width)		( Bit fields reserved for future use)
+bitfield.end				( Bit 8-31 are free for applications)
+ 
+enum.type ENTRY-CODES ( -- )
+  enum CODE ( -- enum)			( Primitive code)
+  enum COLON ( -- enum)			( Colon definition)
+  enum VARIABLE ( -- enum)		( Variable)
+  enum CONSTANT ( -- enum)		( Constant)
+  enum VOCABULARY ( -- enum)		( Vocabulary)
+  enum CREATE ( -- enum)		( Created symbol)
+  enum USER ( -- enum)			( User variable local to task)
+  enum LOCAL ( -- enum)			( Local frame variable)
+  enum FORWARD ( -- enum)		( Forward reference)
+  enum FIELD ( -- enum)			( Field access variable)
+  enum EXCEPTION ( -- enum)		( Exception variable)
+enum.end				( Otherwise forth level manager)
+  
+: .entry ( entry -- )
+  ." entry#" dup . cr			( Print entry address)
+  ." link: " dup +link @ . cr		( Print link)
+  ." name: " dup +name @ $print cr	( Print name)
+  ." mode: " dup +mode @ . cr		( Print mode)
+  ." code: " dup +code @ . cr		( Print code)
+  ." parameter: " +parameter @ . 	( Print parameter field)
+;
+
+: .context ( -- )
+  ." context: " context			( Access context vocabulary set)
+  block[ ( entry -- )
+    .name space				( Print name of all vocabularies)
+  ]; 
+  map-set
+;
+
+: .current ( -- )
+  ." current: " current @ .name space 	( Print name of current vocabulary)
+;
+
+: .entries ( code -- )
+  context				( Access search vocabularies)
+  block[ ( code vocabulary -- code)
+    +parameter @			( Access list of entries)
+    block[ ( code entry -- code)
+      2dup +code @ =			( Check if the entry is a vocabulary)
+      if .name space			( Print its name and continue)
+      else drop then	
+    ]; 
+    map-list
+  ];
+  map-set
+  drop
+;
+
+forth only

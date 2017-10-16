@@ -1,0 +1,231 @@
+.TH PROTOTYPES 3X "August 20, 1990"
+.SH NAME
+prototypes \- object oriented extension modeled as prototypes
+.SH SYNOPSIS
+.B "#include prototypes.f83"
+.LP
+.B "prototypes"
+.SH DESCRIPTION
+Prototypes are a general form of object oriented programming which allow
+data and code sharing on any level without dividing the world into "classes"
+and "instances". A prototype may have slots and methods. Slots hold
+data values and methods are ways of answering messages. If a prototype
+does not contain a requested slot or does not know how to answer a specific
+message it may delegate the request to another prototype through an
+inheritance relation. This library supports the definition of prototypes, 
+slots, messages, and methods. It is build on top of the relations extensions
+by adding an interpreted relation, "inherits", and a delegation function.
+.TP
+.B
+: .message ( message -- )
+Displays the message entry name on the current output stream.
+.TP
+.B
+: .prototype ( prototype -- )
+Displays the prototype entry name on the current output stream. If the 
+prototype does not contain an entry binding the prototype is displayed
+in the format "prototype#<address>".
+.TP
+.B
+: .relations ( prototype -- )
+Displays the current list of relations associated with a prototype. The
+list includes all slots, methods, and the inheritance relation.
+.TP
+.B
+: .slot ( slot -- )
+Displays the slot entry name on the current output stream.
+.TP
+.B
+: -> ( value prototype -- ) immediate
+Used in the following form:
+.br
+.I <value>
+.I <prototype>
+.B ->
+.I <slot>
+.br
+to assign a prototype slot. If the slot is not available it is
+added to the prototypes relations. The assignment is always local
+to the prototype and does not use the inheritance chain. A prototype
+cannot alter the value of an inherited slot without sending a message
+to the prototype who owns the slot.
+.TP
+.B
+: inherited ( -- ) immediate compilation
+Used in the following form:
+.br
+.B inherited
+.I <message>
+.br
+to send the message to the inherited prototype. The inheritance chain is
+retrieved at run-time. This allows addition dynamic binding of messages.
+This word should only be used in a method definition.
+.TP
+.B
+: parent ( prototype -- addr)
+Returns the value of the inheritance relation. The value may be "nil".
+.TP
+.B
+: prototype ( parent -- )
+Used in the following form:
+.br
+.I <parent>
+.B prototype
+.I <name>
+.B ( -- prototype)
+.br
+to create a prototype variable. Slots and message may be associated with
+the prototype. Slots are created with the assignment operator. A message
+may be answered with a "method". The prototype will inherit from the 
+.I <parent>
+prototype. The value "nil" should be used to indicate a root prototype 
+without inheritance.
+.TP
+.B
+: prototype>entry ( prototype -- entry)
+Returns a pointer to the vocabulary entry of the prototype. The value
+may be "nil" of a nameless prototype.
+.TP
+.B
+vocabulary prototypes ( -- )
+The prototypes extension vocabulary. Include to the vocabulary search set,
+"context", to allow access to this library.
+.TP
+.B
+: message ( -- )
+Used in the following form:
+.br
+.B message
+.I <name>
+.B ( ... prototype -- ... prototype)
+.br
+to define a message type. The message will, at run-time, require the
+prototype to answer the message as parameter. A "method" for the message
+is located using the delegation function, "delegate". If a method is found
+it is applied with the prototype as the first parameter. If a method
+is not found the forward declared word "unknown-message" is applied with
+the prototype and message as parameters. This allows implementation of
+error handling as messages and definition of proxy prototypes.
+.TP
+.B
+: method ( prototype -- )
+Used in the following form:
+.br
+.I <prototype>
+.B method
+.I <message>
+.B ( ... prototype -- ...)
+.B ...
+.B ;
+.br
+to define a prototype method of a message. The method is added to the 
+prototypes relations. The method becomes the new method if a method 
+already exists for the message. The method will always receive the
+prototype, self, as the first parameter. The method acts as a normal
+colon definition but it may not contain the following words;
+"exception>", "recurse", and "tail-recurse", as these require
+an entry binding. 
+.TP
+.B
+: new-prototype ( parent -- prototype)
+Returns a new nameless prototype with the given parent. The parent 
+value may be "nil" for a root prototype.
+.TP
+.B
+: slot ( -- )
+Used in the following form:
+.br
+.B slot
+.I <name>
+.B ( prototype -- value)
+.br
+to create a slot name. The slot, when used, will require a prototype 
+as parameter and will return the current value. If the slot cannot be
+found after delegation the forward declared word "unknown-slot" is
+applied with the prototype and slot as parameters. This allows error
+handling as a message or as a colon definitions. A slot may be assigned 
+with the prefix operator "->".
+.TP
+.B
+: this-prototype ( -- prototype)
+Returns the prototype address. Should be used after the word "prototype" 
+as it requires the last entry to be a prototype definition.
+.TP
+.B
+forward unknown-message ( message prototype -- )
+This word is called when the delegation function cannot locate a method
+for the message for the prototype. This word may be defined as a message
+or as a colon definition.
+.TP
+.B
+forward unknown-slot ( slot prototype -- )
+This word is called when the delegation function cannot locate a slot
+for the prototype. This word may be defined as a message or as a colon
+definition. 
+.SH INTERNALS
+Private definitions in the 
+.I prototypes
+vocabulary;
+.TP
+.B 
+: (inherited) ( prototype message -- )
+Run-time action for the word "inherited". Delegates the message to the
+parent prototype instead of searching at the prototype itself.
+.TP
+.B 
+: delegate ( relation prototype -- [relation prototype false] or [value true]) private
+Primitive lookup function. Used to locate slots and methods for a prototype.
+Extends the relations lookup function "?get-relation" so that relations
+may be located along the prototypes inheritance chain.
+.TP
+.B
+item inherits ( -- relation) private
+The predefined inheritance item. Used by the delegation function, 
+"delegate", and other dependent functions, e.g., "slot" and "message".
+.TP
+.B
+variable the-prototype ( -- addr) private
+Variable containing the method prototype. Bound by the word "method" and
+used by the word "inherit" to access the current definition prototype.
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR relations(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the
+entries are indicated together with their parameter stack effect.
+.SH WARNING
+This library contains forward declared words which should be supplied.
+Check that your definitions vocabulary comes before the "prototypes" 
+vocabulary when defining these words. 
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

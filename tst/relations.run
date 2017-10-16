@@ -1,0 +1,89 @@
+TILE Forth version 3.32, Copyright (c) 1990, by Mikael Patel
+Loading Relations test...
+Loading Relations definitions...
+Loading Structure definitions...
+Loading Block definitions...
+1: Some simple items and relations between them
+items: d c b a 
+a:relations: d c b a 
+b:relations: 
+c:relations: 
+d:relations: 
+a:values: d: 13 c: 12 b: 11 a: 10 
+a:values: d: 13 c: 12 b: 11 
+a:values: c: 12 b: 11 
+Joe:values: profession: 1180776 address: 1180744 
+
+2: Reflexive and symmetric relations
+3: Directions and opposite directions
+items: opposite west east south north profession address Joe d c b a 
+west opposite east
+east opposite west
+south opposite north
+north opposite south
+
+4: A small map with locations and paths
+items: Hotel Drugstore Macdonalds HardwareShop opposite west east south north profession address Joe d c b a 
+Hotel:relations: west south east 
+Macdonalds:relations: west north 
+HardwareShop:relations: west 
+Drugstore:relations: east 
+
+5: Sets, Bags and Dictionaries using relations
+items: aDictionary aBag aSet x Hotel Drugstore Macdonalds HardwareShop opposite west east south north profession address Joe d c b a 
+0 -1 10 20 0 0 100 
+aSet:relations: 
+aBag:relations: 
+aDictionary:relations: x 
+
+6: Item relation database dump example
+item is-a-string
+item is-an-item
+item dump
+item aDictionary
+item aBag
+item aSet
+item x
+item Hotel
+item Drugstore
+item Macdonalds
+item HardwareShop
+item opposite
+item west
+item east
+item south
+item north
+item profession
+item address
+item Joe
+item d
+item c
+item b
+item a
+
+is-an-item dump  put-relation
+100 x  put-relation
+Hotel west  put-relation
+Macdonalds south  put-relation
+Hotel east  put-relation
+Macdonalds east  put-relation
+Drugstore west  put-relation
+Hotel north  put-relation
+Hotel west  put-relation
+is-an-item dump  put-relation
+is-an-item dump  put-relation
+east opposite  put-relation
+is-an-item dump  put-relation
+west opposite  put-relation
+is-an-item dump  put-relation
+north opposite  put-relation
+is-an-item dump  put-relation
+south opposite  put-relation
+is-a-string dump  put-relation
+is-a-string dump  put-relation
+" Forth Hacker" profession  put-relation
+" Forth road 4, Forthiana" address  put-relation
+12 c  put-relation
+11 b  put-relation
+
+

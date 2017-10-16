@@ -1,0 +1,167 @@
+.TH SETS 3X "August 7, 1990"
+.SH NAME
+sets \- vector represented sets definitions
+.SH SYNOPSIS
+.B "#include sets.f83"
+.LP
+.B sets
+.SH DESCRIPTION
+Library for sets represented as vectors. The set is a terminated by a "nil"
+pointer. This set representation is mainly used for small sets of entry
+pointer and other non-zero values. "nil" and zero cannot be members of a set.
+The vocabulary search chain is represented as a set.
+.TP
+.B
+: .set ( set -- )
+Assuming that the set contains elements that are vocabulary entries 
+this function will display the set in normal set notation:
+.br
+.B {
+.I <entries> 
+.B }
+.br
+The format is equal to the input notation constant sets.
+.TP
+.B
+: ?empty-set ( set -- bool)
+Returns "true" if the set is empty else "false".
+.TP
+.B
+: ?map-set ( set block[element -- bool] -- )
+Conditional set iterator. Calls the conditional block on each element
+in the set while the block returns "false". The iterator is terminated
+if the block returns "true" or if the block is empty. The conditional
+block will receive the element as a parameter and should return a 
+boolean flag.
+.TP
+.B
+: ?member-set ( element set -- bool)
+Returns "true" if the element is a member of the set else "false".
+.TP
+.B
+: append-set ( element set -- )
+The element is appended to the set. If the element is already a 
+member of the set no operation is performed. An element cannot occur
+more than once in a set.
+.TP
+.B
+: apply-set ( set -- )
+Assuming all elements of the set are entry pointers this words will
+"execute" all elements once. 
+.TP
+.B
+: empty-set ( set -- )
+Assign the set as the empty set.
+.TP
+.B
+: intersection-set ( set1 set2 -- )
+Remove elements in both "set1" and "set2" from "set2". "set2" becomes the
+intersection of the sets.
+.TP
+.B
+: map-set ( set block[element -- ] -- )
+Set iterator function. Call the block on each element in the set.
+The block will receive the element as a parameter.
+.TP
+.B
+: remove-set ( element set -- )
+Remove the element from the set. If the element is not a member of the
+set no operation is taken.
+.TP
+.B
+: set ( size -- )
+Used in the following form:
+.br
+.I <size>
+.B set
+.I <set-name>
+.B ( -- set)
+.br
+to create of set for "size"-1 elements. Each element is "cell" bytes and
+may contain a number or pointer.
+.TP
+.B
+vocabulary sets ( -- )
+The vector represented set extension vocabulary. Include into the 
+vocabulary search set, "context", to allow access of this library.
+.TP
+.B
+: size-set ( set -- num)
+Returns the number of element in the set.
+.TP
+.B
+: union-set ( set1 set2 -- )
+The elements of "set1" are appended to the "set2". "set2" becomes
+the union of the sets.
+.TP
+.B
+: { ( -- ) execution
+Used in the following form:
+.br
+.B {
+.I <entries> 
+.B }
+.B ( -- set)
+.br
+to mark the beginning of a constant set of vocabulary entries.
+.TP
+.B
+: } ( -- set) immediate
+Used in the following form:
+.br
+.B {
+.I <entries> 
+.B }
+.B ( -- set)
+.br
+to mark the end of a constant set of vocabulary entries.
+.SH INTERNALS
+The
+.IR sets
+library contains the following internal function to search a set.
+.TP
+.B
+: search-set ( element set -- [addr1] or [element addr2 false])
+Searches the set for the element. Returns the address, "add1", of the
+element if found else the element together with the last address, 
+"addr2", and the flag, "false", is returned. Used to implement the 
+functions "add-set", "remove-set", "?member-set" and "intersection-set".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR forth(3X),
+.IR blocks(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function list is sorted in ASCII order. The type and mode of the entry
+is indicated together with the parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying, 
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

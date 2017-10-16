@@ -1,0 +1,116 @@
+\
+\  INFIX CALCULATOR GRAMMAR DEFINITIONS
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 19 February 1990
+\
+\  Last updated on: 22 February 1990
+\
+\  Dependencies:
+\       (forth) forth, parser
+\
+\  Description:
+\       Infix notation grammar definitions and semantic binding.
+\       Translates infix notation to postfix (forth).
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Infix Calculator definitions...) cr
+
+#include parser.f83
+
+parser forth definitions
+
+vocabulary calculator ( -- )
+
+symbol calc
+
+parser calculator definitions
+
+\ Factorized and left-to-right execution grammar for expressions
+\
+\ <calc> ::= <expr> <eoln> @ .
+
+symbol expr
+
+calc syntax expr non-terminal eoln non-terminal semantic (forth) . end.syntax
+
+\ <expr> ::= <term> <expr0>
+
+symbol term
+symbol expr0
+
+expr syntax term non-terminal expr0 non-terminal no-semantic end.syntax
+
+\ <expr0> ::= <expr1> <expr0>
+\          |  <empty>
+
+symbol expr1
+
+expr0 syntax expr1 non-terminal expr0 non-terminal no-semantic end.syntax
+expr0 syntax empty non-terminal no-semantic end.syntax
+
+\ <expr1> ::= - <term> @ -
+\ 	   |  + <term> @ +
+
+symbol -
+symbol +
+
+expr1 syntax - terminal term non-terminal semantic (forth) - end.syntax
+expr1 syntax + terminal term non-terminal semantic (forth) + end.syntax
+
+\ <term> ::= <fact> <term0>
+
+symbol fact
+symbol term0
+
+term syntax fact non-terminal term0 non-terminal no-semantic end.syntax
+
+\ <term0> ::= * <term> @ *
+\ 	   |  / <term> @ /
+\          |  mod <term> @ mod
+\ 	   |  <empty> 
+
+symbol *
+symbol /
+symbol mod
+
+term0 syntax * terminal term non-terminal semantic (forth) * end.syntax
+term0 syntax / terminal term non-terminal semantic (forth) / end.syntax
+term0 syntax mod terminal term non-terminal semantic (forth) mod end.syntax
+term0 syntax empty non-terminal no-semantic end.syntax
+
+\ <fact> ::= ( <expr> ) 
+\         |  - <fact> @ negate
+\ 	  |  <number>
+
+symbol (
+symbol )
+
+fact syntax ( terminal expr non-terminal ) terminal no-semantic end.syntax
+fact syntax - terminal fact non-terminal semantic (forth) negate end.syntax
+fact syntax number non-terminal no-semantic end.syntax
+
+forth only

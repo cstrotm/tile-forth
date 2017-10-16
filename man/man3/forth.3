@@ -1,0 +1,1908 @@
+.TH FORTH 3X "September 17, 1990"
+.SH NAME
+forth \- forth-83 standard word set and tile forth kernel extensions
+.SH SYNOPSIS
+.B forth
+.SH DESCRIPTION
+The required word set of Forth-83 Standard excluding the block file word
+set and the
+.IR tile
+forth kernel extensions. Each "word" (function, procedure,
+variable, etc) is described with its stack action, parameters, and
+return values and its code type. The format of the glossary list is:
+.br
+.B 
+<type> <name> ( <stack-effect> ) [ <mode> ]
+.br
+The
+.B 
+<stack-effect>
+describes the parameter and return values for the word in the following
+format:
+.br
+.B 
+( <arguments> -- <returns>)
+.br
+The arguments and return values are given from left to right with the
+deepest stack value first. Symbolic names are often used for the arguments
+while the return values are often only described by data type. 
+.PP
+The optional
+.B <mode>
+may define how the word is interpreted and when it is visible. The 
+mode "immediate" marks the word as always executed. The mode
+"execution" reduces the words visibility to only execution, i.e., 
+interpretation, mode. The mode "compilation" reduces the words visibility
+to only compilation mode. Last, the mode "private" marks the words as
+only visible in the vocabulary where it is defined. Additional modes are
+added by other 
+.IR tile
+forth extensions.
+.PP
+The list of required words in the Forth-83 Standard are described in
+the following sub-sections; "Stack Manipulation", "Memory Access",
+"Logic", "Arithmetic", "Comparison", "Numeric Conversion",
+"Control Structures", "Terminal Input/Output", "Interpreter",
+"Vocabulary", and "Defining Words". Each sub-section is sorted in
+ASCII order.
+.SS "Stack Manipulation"
+The Forth-83 Standard parameter and return stack manipulation
+functions. The
+.I tile
+forth kernel also supports the double number stack manipulation
+extension.
+.TP
+.B
+code -rot ( x y z -- z x y)
+The top three stack entries are rotated, forcing the top to
+become the deepest of the three.
+.TP
+.B
+code 2>r ( x y -- ) compilation
+Double "to-r". "x" and "y" are transferred to the return stack.
+.TP
+.B
+code 2drop ( x y -- )
+Double "drop". "x" and "y" are dropped.
+.TP
+.B
+code 2dup ( x1 y1 -- x1 y1 x1 y1)
+Double "dup". The first pair is copied.
+.TP
+.B
+code 2over (x1 y1 x2 y2 -- x1 y1 x2 y2 x1 y1)
+Double "over". The second pair is copied.
+.TP
+.B
+code 2r> ( -- x y) compilation
+Double "from-r". "x" and "y" are removed from the return stack
+and transferred to the data stack.
+.TP
+.B
+code 2rot ( x1 y1 x2 y2 x3 y3 -- x2 y2 x3 y3 x1 y1)
+Double "rot". The three pairs change places.
+.TP
+.B
+code 2swap ( x1 y1 x2 y2 -- x2 y2 x1 y1)
+Double "swap". The two pairs change places.
+.TP
+.B
+code >r ( x -- ) compilation
+Transfer "x" to the return stack.
+.TP
+.B
+code ?dup ( x -- [x x] or [x])
+Duplicate "x" if it is non-zero.
+.TP
+.B
+code depth ( -- +n)
+"+n" is the number of values contained in the data stack
+before "+n" was placed on the stack.
+.TP
+.B
+code drop ( x -- )
+"x" is removed from the stack.
+.TP
+.B
+code dup ( x -- x x)
+Duplicate "x".
+.TP
+.B
+code nip ( x y -- y)
+The second stack element "x" is removed.
+.TP
+.B
+code over ( x y -- x y x)
+A copy of "x" is made and moved over "y".
+.TP
+.B
+code pick ( +n -- x)
+"x" is a copy of the "+n"-th stack element, not counting
+"+n" itself. [0..depth-1]
+.br
+"0 pick" is equivalent to "dup"
+.br
+"1 pick" is equivalent to "over"
+.TP
+.B
+code r> ( -- x) compilation
+"x" is removed from the return stack and transferred to
+the data stack.
+.TP
+.B
+code r@ ( -- x) compilation
+"x" is a copy of the top of the return stack.
+.TP
+.B
+code roll ( +n -- )
+The "+n"-th stack value, not counting "+n" itself is first
+removed and then transferred to the top of the stack, moving
+the remaining values into the vacated position. The parameter
+should be in the interval: [0..depth-1].
+.br
+"0 roll" is a null operation
+.br
+"1 roll" is equivalent to "swap"
+.br
+"2 roll" is equivalent to "rot"
+.TP
+.B
+code rot ( x y z -- y z x)
+The top three stack entries are rotated, bringing the deepest
+to the top.
+.TP
+.B
+code swap ( x y -- y x)
+The top two stack entries are exchanged.
+.TP
+.B
+code tuck ( x y -- y x y)
+A copy of "y" is tucked under "x".
+.SS "Memory Access"
+The Forth-83 Standard memory and data access word set. The
+.IR tile
+forth kernel extends the Forth-83 Standard with additional access
+functions for bit testing and bit field access. All access to memory
+is achieved through this word set.
+.TP
+.B
+code ! ( 32b addr -- )
+The postfix assignment operator. Store "32b" at "addr".
+.TP
+.B
+code +! ( x1 addr -- )
+"x1" is added to the value at "addr" using the convention
+for "+". The value at "addr" is assumed to be of size "cell".
+The sum replaces the original value at "addr".
+.TP
+.B
+code -match ( addr1 addr2 n -- bool)
+Matches the strings at address "addr1" and "addr2" of length "n"
+at the parameter addresses. Returns "false" if the strings are
+equal else "true". If the length "n" is zero the function will
+return "true".
+.TP
+.B
+code -trailing ( addr +n1 -- addr +n2)
+The character counter "+n1" of a text string beginning at
+"addr" is adjusted to exclude trailing spaces. If "+n1" is
+zero, then "+n2" is zero. If the entire string consists of
+spaces, then "+n2" is zero.
+.TP
+.B
+code <c@ ( addr -- 8b)
+"8b" is the value at "addr". The value is sign extended to the
+stack (cell) width.
+.TP
+.B
+code <f@ ( x p w -- y)
+Field access within a 32-bit quantity. "y" are the bits within
+"x" at position "p" and with a bit field width, "w". Bits positions
+are counted from right to left starting with zero. A field is
+defined from a position and upwards. The result "y" is sign
+extended.
+.TP
+.B
+code <w@ ( addr -- 16b)
+"16b" is the value at "addr". The value is sign extended to
+the stack (cell) width.
+.TP
+.B
+code @ ( addr -- 32b)
+"32b" is the value at "addr". Primary variable value access function.
+.TP
+.B
+code b! ( x y p -- z)
+Returns "z", the result of setting the bit at position "p" in "y"
+according to the value of "x". The bit is set to zero if "x" is
+zero else one.
+.TP
+.B
+code b@ ( x p -- y)
+Returns "true" if the bit a position "p" in "x" is one else "false".
+.TP
+.B
+code bounds ( addr1 n -- addr2 addr1)
+Converts vector address and size to boundary address suitable for
+a "do"-loop. "addr2" is the end address of the vector, i.e., the
+sum of "addr1" and "n".
+.TP
+.B
+code c! ( 8b addr -- )
+The postfix assignment operator. Store "8b" at "addr".
+.TP
+.B
+code c@ ( addr -- 8b)
+"8b" is the value at "addr". The value is not sign extended.
+.TP
+.B
+code cmove ( addr1 addr2 u -- )
+Move the "u" bytes at address "addr1" to "addr2". The byte
+at "addr1" is moved first, proceeding toward high memory.
+If "u" is zero nothing is moved.
+.TP
+.B
+code cmove> ( addr1 addr2 u -- )
+Move the "u" bytes at address "addr1" to "addr2". The move
+begins by moving the byte at ("addr1"+"u"-1) to ("addr2"+"u"-1)
+and proceeds to successively lower addresses for "u" bytes.
+If "u" is zero nothing is moved. Useful for sliding a string
+towards higher addresses.
+.TP
+.B
+code count ( addr1 -- addr2 +n)
+"addr2" is "addr1"+1 and "+n" is the length of the counted
+string at "addr1". The byte "addr1" contains the byte count
+"+n". Range of "+n" is [0..255].
+.TP
+.B
+code f! ( x y p w -- z)
+Inserts the value of "x" into "y" at the bit field which is defined
+by the position "p" and with the width "w". The value "x" is shifted
+and masked into "y" to form the result "z".
+.TP
+.B
+code f@ ( x p w -- y)
+Field access within a 32-bit quantity. "y" are the bits within
+"x" at position "p" and with a bit field width, "w". Bits positions
+are counted from right to left starting with zero. A field is
+defined from a position and upwards.
+.TP
+.B
+code fill ( addr u 8b -- )
+"u" bytes of memory beginning at "addr" are set to "8b".
+No action is taken is "u" is zero.
+.TP
+.B
+code w! ( 16b addr -- )
+The postfix assignment operator. Store "16b" at "addr".
+.TP
+.B
+code w@ ( addr -- 16b)
+"16b" is the value at "addr". The value is not sign extended.
+.SS "Logic"
+The Forth-83 Standard logic functions. The
+.IR tile
+forth kernel extends the basic function set with boolean constants
+and a boolean conversion function. All logic functions manipulate
+their parameters bit-by-bit.
+.TP
+.B
+code and ( 32b1 32b2 -- 32b3)
+"32b3" is the bit-by-bit logical and of "32b1" and "32b2".
+.TP
+.B
+code boolean ( n -- bool)
+Maps numerical value to a boolean value, "true" or "false".
+Non-zero values are mapped to "true" and zero to "false".
+.TP
+.B
+constant false ( -- 0)
+The constant "false" represented by the value zero.
+.TP
+.B
+code or ( 32b1 32b2 -- 32b3)
+"32b3" is the bit-by-bit inclusive-or of "32b1" with "32b2".
+.TP
+.B
+code not ( 32b1 -- 32b2)
+"32b2" is the one's complements of "32b1".
+.TP
+.B
+constant true ( -- -1)
+The constant "true" represented by the value minus one.
+.TP
+.B
+code xor ( 32b1 32b2 -- 32b3)
+"32b3" is the bit-by-bit exclusive-or of "32b1" with "32b2".
+.SS "Arithmetic"
+The Forth-83 Standard arithmetic word set. The
+.IR tile
+forth kernel extends the Forth-83 Standard with arithmetic functions
+for shifting and additional numeric constants. Double number width
+arithmetic function such as "d+" and "dnegate" are not implemented as
+.IR tile
+forth is a 32-bit implementation. Arithmetic errors are caught by the
+.IR tile
+forth kernel and passed to the application as signals. An exception
+block may be used to catch the signal.
+.TP
+.B
+code * ( w1 w2 -- w3)
+"w3" is the least-significant 32 bits of the arithmetic
+product of "w1" times and "w2".
+.TP
+.B
+code */ ( w1 w2 w3 -- w4)
+"w1" is first multiplied by "w2" producing an intermediate
+32-bit result. "w4" is the floor of the quotient of the
+intermediate 32-bit result divided by the divisor "w3". The
+product of "w1" times "w2" is maintained as an intermediate
+32-bit result for greater precision then the otherwise
+equivalent sequence: "w1 w2 * w3 /". An error condition results
+if the divisor is zero and an exception is raised.
+.TP
+.B
+code */mod ( w1 w2 w3 -- w4 w5)
+"w1" is first multiplied by "w2" producing an intermediate
+32-bit result. "w4" is the remainder and "w5" is the floor
+of the quotient of the intermediate 32-bit result divided by
+the divisor "w3". A 32-bit intermediate product is used as
+for "*/". "w4" has the same sign as "w3" or is zero. An error
+condition results if the divisor is zero and an exception is
+raised.
+.TP
+.B
+code + ( w1 w2 -- w3)
+"w3" is the arithmetic sum of "w1" and "w2".
+.TP
+.B
+code - ( w1 w2 -- w3)
+"w3" is the result of subtracting "w2" from "w1".
+.TP
+.B
+constant -1 ( -- -1)
+Constant minus one.
+.TP
+.B
+constant -2 ( -- -2)
+Constant minus two.
+.TP
+.B
+constant -4 ( -- -4)
+Constant minus four.
+.TP
+.B
+code / ( w1 w2 -- w3)
+"w3" is the floor of the quotient of "w1" divided by the
+divisor "w2". An error condition results if the divisor is
+zero.
+.TP
+.B
+code /mod ( w1 w2 -- w3 w4)
+"w3" is the remainder and "w4" the floor of the quotient
+of "w1" divided by the divisor "w2". "w3" has the same sign
+as "w2" or is zero. An error condition results if the divisor
+is zero and an exception is raised.
+.TP
+.B
+constant 0 ( -- 0)
+Constant zero.
+.TP
+.B
+constant 1 ( -- 1)
+Constant one.
+.TP 	
+.B
+code 1+ ( w1 -- w2)
+"w2" is the result of adding one to "w1" according to
+the operation of "+".
+.TP
+.B
+code 1- ( w1 -- w2)
+"w2" is the result of subtracting one to "w1" according to
+the operation of "-".
+.TP
+.B
+constant 2 ( -- 2)
+Constant two.
+.TP
+.B
+code 2* ( n1 -- n2)
+"n2" is the result of arithmetically shifting "n1" left one
+bit. The sign is included in the shift and remains unchanged.
+.TP
+.B
+code 2+ ( w1 -- w2)
+"w2" is the result of adding two to "w1" according to
+the operation of "+".
+.TP
+.B
+code 2- ( w1 -- w2)
+"w2" is the result of subtracting two to "w1" according to
+the operation of "-".
+.TP
+.B
+code 2/ ( n1 -- n2)
+"n2" is the result of arithmetically shifting "n1" right one
+bit. The sign is included in the shift and remains unchanged.
+.TP
+.B
+constant 4 ( -- 4)
+Constant four.
+.TP
+.B
+code << ( n1 n2 -- n3)
+"n3" is the result of logically shifting "n1" left "n2" steps.
+.TP
+.B
+code >> ( n1 n2 -- n3)
+"n3" is the result of logically shifting "n1" right "n2" steps.
+.TP
+.B
+code abs ( n -- u)
+"u" is the absolute value of "n".
+.TP
+.B
+code max ( n1 n2 -- n3)
+"n3" is the greater of "n1" and "n2" according to the operation of ">".
+.TP
+.B
+code min ( n1 n2 -- n3)
+"n3" is the lesser of "n1" and "n2" according to the operation of "<".
+.TP
+.B
+code mod ( n1 n2 -- n3)
+"n3" is the remainder after dividing "n1" by divisor "n2".
+"n3" has the same sign as "n2" or is zero. An error condition
+results if the divisor is zero or if the quotient falls outside
+of the numerical range.
+.TP
+.B
+code negate ( n1 -- n2)
+"n2" is the two's complement of "n1", i.e., the difference
+of zero less "n1".
+.TP
+.B
+constant nil ( -- 0)
+Constant for a nil pointer.
+.TP
+.B
+code um* ( u1 u2 -- u3)
+"u3" is the unsigned product of "u1" times "u2". All
+values and arithmetic are unsigned.
+.TP
+.B
+code um/mod ( u1 u2 -- u3 u4)
+"u3" is the remainder and "u4" is the floor of the quotient
+after dividing "u1" by the divisor "u2". All values and
+arithmetic are unsigned. An error condition results if
+the divisor is zero or if the quotient lies outside the
+numerical range.
+.SS "Comparison"
+The Forth-83 Standard comparison word set. The
+.IR tile
+forth kernel extends the standard with an integer range test function.
+The kernel does not implement double number comparison functions.
+Boolean values "true" and "false" are represented with "-1" and "0".
+.TP
+.B
+code 0< ( n -- bool)
+Returns "true" if "n" is less than zero (negative).
+.TP
+.B
+code 0= ( w -- bool)
+Returns "true" if "w" is zero.
+.TP
+.B
+code 0> ( n -- bool)
+Returns "true" if "n" is greater than zero.
+.TP
+.B
+code < ( n1 n2 -- bool)
+Returns "true" if "n1" is less than "n2".
+.TP
+.B
+code = ( w1 w2 -- bool)
+Returns "true" if "w1" is equal to "w2"
+.TP
+.B
+code > ( n1 n2 -- bool)
+Returns "true" if "n1" is greater than "n2"
+.TP
+.B
+code ?within ( value lower upper -- bool)
+Tests if the parameter "value" is within the range "lower" to
+"upper". Returns "true" if within the range else "false".
+.TP
+.B
+code u< ( u1 u2 -- bool)
+Returns "true" if "u1" is less than "u2".
+.SS "Numeric Conversion"
+The Forth-83 Standard numeric conversion functions. The
+.IR tile
+forth kernel extends the standard with string to number converter,
+and general number literal recognition.
+.TP
+.B
+code # ( +d1 -- +d2 )
+The remainder of "+d1" divided by the value of "base" is
+converted to a ASCII character and appended to the output
+string toward lower memory addresses. "+d2" if the quotient
+and is maintained for further processing. Typically used
+between "<#" and "#>".
+.TP
+.B
+code #> ( x -- addr +n)
+Pictured numeric output conversion is ended dropping "x".
+"addr" is the address of the resulting output string.
+"+n" is the number of characters in the output string.
+"addr" and "+n" together are suitable for "type".
+.TP
+.B
+code #s ( +x -- 0)
+"+x" is converted appending each resultant character into
+the pictured numeric output string until the quotient
+is zero. A single zero is appended to the output string if the
+number was initially zero. Typically used between "<#" and "#>".
+.TP
+.B
+code <# ( x -- )
+Initialize pictured numeric output conversion. The words:
+"<# # #s hold sign #>" can be used to specify the conversion
+of a number into an ASCII text string stored in right-to-left order.
+.TP
+.B
+code ?number ( str -- [n true] or [str false]) recognizer
+Convert a string of character to a number using the current "base".
+If the conversion is not possible the string is returned with a
+"false" flag indicating that the conversion failed otherwise the
+conversion value, the number, and a "true" flag is returned.
+.TP
+.B
+variable base ( -- addr)
+The address of a variable containing the current numeric
+conversion radix.
+.TP
+.B
+code binary ( -- )
+Set the input-output numeric conversion "base" to 2.
+.TP
+.B
+code convert ( +d1 addr1 -- +d2 addr2)
+"+d2" is the result of converting the characters within the
+text beginning at "addr1"+1 into digits, using the value of
+"base", and accumulating each into "+d1" after multiplying "+d1"
+by the value of "base". Conversion continues until an inconvertible
+character is encountered. "addr2" is the location of the first
+inconvertible character.
+.TP
+.B
+code decimal ( -- )
+Set the input-output numeric conversion "base" to 10.
+.TP
+.B
+code hex ( -- )
+Set the input-output numeric conversion "base" to 16.
+.TP
+.B
+code hold ( char -- )
+"char" is inserted into a pictured numeric output string.
+Typically used between "<#" and "#>".
+.TP
+.B
+code octal ( -- )
+Set the input-output numeric conversion "base" to 8.
+.TP
+.B
+code sign ( n -- )
+If "n" is negative, an ASCII "-" (minus sign) is appended
+to the pictured numerical output string. Typically used
+between "<#" and "#>".
+.SS "Control Structures"
+The Forth-83 Standard control flow word set. The
+.IR tile
+forth kernel extends the basic set of control structures with
+environment arguments access, conditional compilation, case structure,
+additional loop constructs, and recursion words.
+.TP
+.B
+code #else ( -- ) immediate
+Used in the following form:
+.br
+.I <flag>
+.B #if
+.I <true-part>
+.B #else
+.I <else-part>
+.B #then
+.br
+Marks the beginning of a "else"-part of a conditional code section.
+.TP
+.B
+code #if ( flag -- ) immediate
+Used in the following form:
+.br
+.I <flag>
+.B #if
+.I <true-part>
+.B [ #else
+.I <false-part>
+.B ] #then
+.br
+Marks the beginning of a conditional code section. The
+else section is optional.
+.TP
+.B
+code #ifdef ( -- ) immediate
+Used in the following form for testing if a symbol already
+is available:
+.br
+.B #ifdef
+.I <name>
+.I <true-part>
+.B [ #else
+.I <false-part>
+.B ] #then
+.br
+If
+.I <name>
+is available in the current search chain "context" the true
+section of code is executed or compiled according to mode
+else the optional false section.
+.TP		
+.B
+code #ifundef ( -- ) immediate
+Used in the following form:
+.br
+.B #ifundef
+.I <name>
+.I <true-part>
+.B [ #else
+.I <false-part>
+.B ] #then
+.br
+Performs the same function as "#ifdef" but the true section is
+executed if the symbol is not available in the current search
+chain.
+.TP
+.B
+code #then ( -- ) immediate
+Used in the following form:
+.br
+.I <flag>
+.B #if
+.I <true-part>
+.B [ #else
+.I <false-part>
+.B ] #then
+.br
+Marks the end of a conditional code section.
+.TP
+.B
+code +loop ( n -- ) immediate compilation
+"n" is added to the loop index. If the new index was incremented
+across the boundary between limit-1 and limit then the loop is
+terminated and the loop control parameters are discarded. When
+the loop is not terminated, execution continues to just after
+the corresponding "do". "+loop" is not available outside a colon
+definition.
+.TP
+.B
+code ?do ( w1 w2 -- ) immediate compilation
+Used in the following forms:
+.br
+.B ?do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B loop
+.br
+or
+.br
+.B ?do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B +loop
+.br
+Begins a checked entry loop which terminates based on control
+parameters. The loop index begins at "w2", and terminates based
+on the limit "w1". See "loop" and "+loop" for details on how the loop
+is terminated. If "w1" and "w2" are equal the loop section is skipped.
+.TP
+.B
+code abort ( -- )
+Clears the data stack and performs the function of "quit".
+No message is displayed.
+.TP
+.B
+code abort" ( flag -- ) immediate compilation
+Used in the following form:
+.br
+.I <flag>
+.B
+abort"
+.I "<abort-message>"
+.B
+"
+.br
+When later executed, if "flag" is true the
+.I "<abort-message>"
+delimited by close quote, is displayed and then a system
+dependent error abort sequence, including the function "abort",
+is performed. If "flag" is false, the flag is dropped and
+execution continues. The blank following abort" is not part of
+the
+.I <abort-message>.
+.TP
+.B
+code again ( -- ) immediate compilation
+Used in the following form to compile an eternal loop:
+.br
+.B begin
+.I ...
+.B again
+.br
+The loop construct may only be left by an "abort" or an
+"exit" word in the code section of the loop.
+.TP
+.B
+code argc ( -- num)
+Returns the number of arguments passed from the environment.
+The first argument is always the name of the application:
+"forth" or the name of the start symbol.
+.TP
+.B
+code argv ( n -- str)
+Given an index returns the corresponding argument string. The
+"string" vocabulary words may be used for process an argument string.
+.TP	
+.B
+code begin ( -- ) immediate compilation
+Used in the following forms:
+.br
+.B begin
+.I ...
+.I <flag>
+.B while
+.I ...
+.B repeat
+.br
+or
+.br
+.B begin
+.I ...
+.I <flag>
+.B until
+.br
+or
+.br
+.B begin
+.I ...
+.B again
+.br
+"begin" marks the start of a word sequence for repetitive
+execution. A "begin-while-repeat" loop will repeat until
+.I <flag>
+is false. "begin-until" loop will be repeated until
+.I <flag>
+is true and "begin-again" will repeat until "abort"-ed. The words
+after "until" and "repeat" will be executed when either loop
+is finished.
+.TP
+.B
+code bye ( -- )
+Leaves the interaction level and exits to the outer support
+system (if any).
+.TP
+.B
+code case ( value -- ) immediate compilation
+Used in the following form:
+.br
+.B case
+.I <case-structure>
+.I " { <default-part> }"
+.B endcase
+.br
+to mark the beginning of a case structure which should contain
+a one or several case statements:
+.br
+.I <case-value>
+.B of
+.I <case-part>
+.B endof
+.br
+The code section after the last case value part will receive "value"
+as a parameter thus a default behavior is easy implemented. The default
+section may only copy this value as "endcase" is an
+implicit "drop".
+.TP
+.B
+code do ( w1 w2 -- )	immediate compilation
+Used in the following forms:
+.br
+.B do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B loop
+.br
+or
+.br
+.B do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B +loop
+.br
+Begins a loop which terminates based on control parameters.
+The loop index begins at "w2", and terminates based on the
+limit "w1". See "loop" and "+loop" for details on how the loop
+is terminated. The loop is always executed at least once.
+.TP
+.B
+code else ( -- ) immediate compilation
+Used in the following form:
+.br
+.I <flag>
+.B if
+.I <true-part>
+.B else
+.I <false-part>
+.B then
+.br
+in a conditional structure to mark the beginning of the false
+section. This section is executed when the
+.I <flag>
+is "false". The true section is then skipped.
+.TP
+.B
+code endcase ( -- ) immediate compilation
+Used in the following form:
+.br
+.B case
+.I <case-structure>
+.I " { <default-part> }"
+.B endcase
+.br
+to mark the end of a case structure.
+.TP
+.B
+code endof ( -- ) immediate compilation
+Used in the following form:
+.br
+.I <case-value>
+.B of
+.I <case-part>
+.B endof
+.br
+to mark the end of a cast value structure.
+.TP
+.B
+code execute ( addr -- )
+The word definition indicated by "addr" is executed. An
+error condition exists if "addr" is not a compilation address.
+.TP
+.B
+code exit ( -- ) compilation
+Compiled within a colon definition such that when executed,
+the colon definition returns control to the definition that
+passed control to it by returning control to the return point
+on the top of the return stack. An error condition exists if
+the top of the return stack does not contain a valid return
+point. May not be used within a "do-loop" or "do-+loop" or
+an "exception"-block.
+.TP
+.B
+code i ( -- w) compilation
+"w" is a copy of the current loop index. May only be used in
+the form:
+.br
+.B do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B loop
+.br
+or
+.br
+.B do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B +loop
+.br
+"i" is not visible outside a colon definition, i.e., when
+text interpreting and should only be used within a loop-block.
+.TP
+.B
+code if ( flag -- ) immediate compilation
+Used in the following form:
+.br
+.I <flag>
+.B if
+.I <true-part>
+.B [ else
+.I <else-part>
+.B ] then
+.br
+If "flag" is true, the words following "if" are executed
+and the words following "else" until just after "then" are
+skipped. The "else" part is optional. If "flag" is false,
+words from "if" through "else", or from "if" through "then"
+(when no "else" is used) are skipped.
+.TP
+.B
+code j ( -- w) compilation
+"w" is a copy of the index of the next outer loop. May only
+be used within a nested "do-loop" or "do-+loop" in the form:
+.br
+.B do
+.I ...
+.B do
+.I ...
+.B "{ i | j | leave }"
+.I ...
+.B loop
+.I ...
+.B loop
+.br
+"j" is not visible outside a colon definition, i.e., when
+text interpreting.
+.TP
+.B
+code leave ( -- ) compilation
+Transfers execution to just beyond the next "loop" or "+loop".
+The loop is terminated and the loop control parameters are
+discarded. May only be used in the following forms:
+.br
+.B do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B loop
+.br
+or
+.br
+.B do
+.I ...
+.B "{ i | leave }"
+.I ...
+.B +loop
+.br
+"leave" may appear within other control structures which are
+nested within the "do-loop" structure. More than one "leave" may
+appear within a do-loop.
+.TP
+.B
+code loop ( -- ) immediate compilation
+Increments the "do-loop" index by one. If the new index was
+incremented across the boundary between limit-1 and limit
+the loop is terminated and the loop control parameters are
+discarded. When the loop is not terminated, execution continues
+to just after the corresponding "do".
+.TP
+.B
+code of ( value -- ) immediate compilation
+Used in the following form:
+.br
+.I <case-value>
+.B of
+.I <case-part>
+.B endof
+.br
+within a case structure to define a value case.
+.TP
+.B
+code quit ( -- )
+Clears the return stack, sets interpret state, accepts new
+input from the current input device, and begins text
+interpretation. No messages is displayed.
+.TP
+.B
+code recurse ( -- ) immediate compilation
+Used within a definition to make a recursive call to the
+current definition.
+.TP
+.B
+code repeat ( -- ) immediate compilation
+Used in the following form:
+.br
+.B begin
+.I ...
+.I <flag>
+.B while
+.I ...
+.B repeat
+.br
+At execution-time, "repeat" continues execution to just after
+the corresponding "begin".
+.TP
+.B
+code tail-recurse ( -- ) immediate compilation
+Used within a definition to create a recursive call to the
+current definition without saving return status. This is an
+efficient way of generating iterative forms as tail recursive
+calls may be performed any number of times within a definition
+and corresponds to a branch to the beginning of the definition.
+.TP
+.B
+code then ( -- ) immediate compilation
+Used in the following form:
+.br
+.I <flag>
+.B if
+.I <true-part>
+.B [ else
+.I <else-part>
+.B ] then
+.br
+Marks the end of a conditional statement "if-else-then".
+.TP
+.B
+code until ( flag -- ) immediate compilation
+Used in the following form:
+.br
+.B begin
+.I ...
+.I <flag>
+.B until
+.br
+Marks the end of a "begin-until" loop which will terminate
+based on "flag". If "flag" is true, the loop is terminated.
+If "flag" is false, execution continues to just after the
+corresponding "begin".
+.TP
+.B
+code while ( flag -- ) immediate compilation
+Used in the following form:
+.br
+.B begin
+.I ...
+.I <flag>
+.B while
+.I ...
+.B repeat
+.br
+Selects conditional execution based on "flag". When "flag"
+is true, execution continues to just after the "while" through
+to the "repeat" which then continues execution to just after the
+"begin". When "flag" is false, execution continues to just after
+the "repeat", exiting the control structure.
+.SS "Terminal Input/Output"
+The Forth-83 Standard terminal interaction functions. The
+.IR tile
+forth kernel extends the basic set of input and output functions with
+field format output and access of the current input source file name
+and the current line number count.
+.TP
+.B
+code . ( n -- )
+The absolute value of "n" is displayed in a free field format
+with a leading minus sign if "n" is negative. A space is emit after
+the number.
+.TP
+.B
+code ." ( -- ) immediate compilation
+Used in the following form within a code definition:
+.br
+.B 
+."
+.I <output-string>
+.B 
+"
+.br
+Later execution will display the characters
+.I <output-string>
+up to but but including the delimiter (close-quote). The blank
+following the "." " is not part of the
+.I <output-string>
+but the word separator.
+.TP
+.B
+code .( ( -- ) immediate
+Used in the following form:
+.br
+.B .(
+.I <output-comment>
+.B )
+.br
+The characters
+.I <output-comment>
+up to but not including the delimiter (closing-parenthesis) are
+displayed. The blank following ".(" is not part of the
+.I <output-comment>.
+.TP
+.B
+code .s ( -- )
+Displays the current parameter stack contents in the format:
+.br
+.B "[ <depth> ] <bottom> \e ... \e <top>"
+.TP
+.B
+code ascii ( -- char) immediate
+Used in the following form:
+.br
+.B ascii
+.I <character>
+.B ( -- char)
+.br
+to create a character literal.
+.TP
+.B
+code cr ( -- )
+.br
+Emits ASCII characters carriage-return and line-feed.
+.TP
+.B
+code emit ( x -- )
+The least-significant 7-bit ASCII character is displayed.
+.TP
+.B
+code expect ( addr +n -- )
+Receive characters and store each into memory. The transfer
+begins at "addr" proceeding towards higher addresses one byte
+per character until either a "return" is received or until "+n"
+characters have been transferred. No more than "+n" characters
+will be stored. The "return" is not stored into memory. No
+characters are received or transferred if "+n" is zero. All
+characters actually received and stored into memory will be
+displayed, with "return" displaying as a space. The actual number
+of characters received is stored in the variable "span".
+.TP
+.B
+code key ( -- x)
+The next extended ASCII character received. All valid ASCII
+characters can be received. Control characters are not processed
+by the system for any editing purpose. Characters received by
+"key" are displayed in
+.IR tile
+forth due to interaction with the operating system.
+.TP
+.B
+code line ( -- +n)
+Returns the current number of lines received from the current
+input "source".
+.TP
+.B
+code r. ( n w -- )
+The absolute value of "n" is displayed in a field format of
+width "w" with a leading minus sign if "n" is negative.
+.TP
+.B
+code source ( -- str)
+Returns the name string of the fully path expanded current file
+name. "nil" is returned if the current source is the standard
+input device.
+.TP
+.B
+code space ( -- )
+Displays an ASCII space, i.e., emits an ASCII space character code.
+.TP
+.B
+code spaces ( +n -- )
+Displays "+n" ASCII spaces. Nothing is displayed if "+n" is zero.
+.TP
+.B
+variable span ( -- addr)
+The address of a variable containing the count of characters
+actually received and stored by the last execution of "expect".
+.TP
+.B
+code type ( addr +n -- )
+"+n" characters are displayed from memory beginning with
+the character at "addr" and continuing through consecutive
+addresses. Nothing is displayed if "+n" is zero.
+.TP
+.B
+code u. ( u -- )
+"u" is displayed as an unsigned number in a free-field format.
+.TP
+.B
+code u.r ( u w -- )
+"u" is displayed as an unsigned number in a field format
+with width "w".
+.SS "Interpreter"
+The Forth-83 Standard interpreter functions. The
+.IR tile
+forth kernel extends the interpreter word set with functions for
+loading of source files, library directory paths and mode marking of
+vocabulary entries. The additional modes allow marking with concern
+to the interpreter state and visibility across vocabularies.
+.TP
+.B
+code #include ( -- )
+Used in the following form to load source files:
+.br
+.B #include
+.I <file-name>
+.br
+The
+.I <file-name>
+is any string until a white space character. The file is located using the
+current set of paths defined by the environment variables 
+.B $TILEPATH, 
+.B $PWD,
+and
+.B $HOME. 
+If the file has already been included the operation is ignored.
+The kernel maintains a list of all loaded files with their fully expanded
+names.
+.TP
+.B
+code #path ( -- )
+Used in the following form to define a file search path:
+.br
+.B #path
+.I <path-name>
+.br
+The input function, "#include", uses a set of path to allow shorter
+file names to be used and support source code libraries. The initial
+set of paths are defined by the environment variables
+.B $PWD,
+.B $TILEPATH,
+and
+.B $HOME.
+.TP
+.B
+code ( ( -- ) immediate
+Used in the following form:
+.br
+.B (
+.I <comment-string>
+.B )
+.br
+The characters enclosed by the delimiter ")" are considered
+comments. Comments are not otherwise processed. The blank
+following "(" is not part of the comment string. The number
+of characters in the comment string may be from zero to the
+number of characters remaining in the input stream up to the
+closing parenthesis.
+.TP
+.B
+code , ( x -- )
+Allocates space for "x" then store value at "here cell -".
+.TP
+.B
+code .name ( addr1 -- )
+Given the compilation address "addr1" of an entry prints the
+name of the entry.
+.TP
+.B
+code >body ( addr1 -- addr2)
+"addr2" is the parameter field address corresponding to
+the compilation address "addr1".
+.TP
+.B
+code ?compile ( -- ) compilation
+Used in the following form:
+.br
+.B ?compile
+.I <compiled-entry>
+.br
+to compile an entry at run-time. Considers the compilation
+state at run-time. If the state is compiling then performs
+the same action as "compile" else does nothing and the
+succeeding word is executed and not compiled.
+.TP
+.B
+code [ ( -- ) immediate
+Sets interpret (execution) state. The text from the input stream
+is subsequently interpreted. Typically usage see "literal".
+.TP
+.B
+code [compile] ( -- ) immediate compilation
+Used in the following form:
+.br
+.B [compile]
+.I <compiled-entry>
+.br
+Forces compilation of the succeeding word. This allows compilation
+of an "immediate" word when it would otherwise have been executed. If
+the entry is not found an error message is given.
+.TP
+.B
+code \e ( -- ) immediate
+Used in the following form:
+.br
+.B \e
+.I <comment-string>
+.br
+Comment terminate by end of line (carriage return).
+.TP
+.B
+code ] ( -- )
+Sets compilation state. The text from the input stream is
+subsequently compiled.
+.TP
+.B
+code allot ( w -- )
+Allocated "w" bytes from the dictionary. The address to the
+next available dictionary location is updated accordingly.
+.TP
+.B
+code align ( -- )
+Align dictionary pointer to nearest cell boundary.
+.TP
+.B
+code cell ( -- bytes)
+Returns the number of bytes per cell. Four bytes for a
+32-bit Forth.
+.TP
+.B
+code cell+ ( n -- m)
+Returns the result, "m", of incrementing "n" by "cell".
+.TP
+.B
+code cells ( n -- m)
+Returns the given value, "n", in cells. The result of "n" times "cell".
+.TP
+.B
+code compilation ( -- )
+Used in the following form:
+.br
+.B :
+.I <name>
+.B ( ... ) 
+.B ...
+.I <colon-definition>
+.B ...
+.B ;
+.B compilation
+.br
+Marks the most recently created dictionary entry as a word
+which is only available in compilation mode.
+.TP
+.B
+code compile ( -- ) compilation
+Typically used in the following form:
+.br
+.B :
+.I <name>
+.B ...
+.B compile
+.I <compiled-entry>
+.B ...
+.B ;
+.B immediate compilation
+.br
+When
+.I <name>
+is executed, the compilation address compiled for
+.I <compiled-entry>
+is compiled and not executed.
+.I <name>
+is typically "immediate" and "compilation", and
+.I <compiled-entry>
+is typically not an immediate word.
+.TP
+.B
+code compiling ( -- bool)
+Returns the contents of the state variable as this variable
+should not be altered by other than system functions.
+.TP
+.B
+code does> ( addr -- ) immediate compilation
+Defines the run-time action of a word created by a
+high-level defining word. Used in the following form:
+.br
+.B :
+.I <defining>
+.B ( ... )
+.br
+.B ...
+.I <create-definition>
+.B ...
+.br
+.B does> ( addr -- ...)
+.br
+.B ...
+.I <run-time-definition>
+.B ...
+.B ;
+.br
+and then
+.br
+.B <defining>
+.I <name>
+.B (...)
+.br
+where
+.I <create-definition>
+is "create" or any user defined word which executes "create", and
+allocated memory. Marks the termination of the defining part of the
+defining word
+.I <defining>
+and then begins the definition of the
+.I <run-time-definition>
+for words that will later be defined by
+.I <defining>.
+When
+.I <name>
+is later executed, the parameter field address, "addr", of
+.I <name>
+is pushed on the parameter stack and then the sequence of
+words between "does>" and ";", the
+.I <run-time-definition>,
+is executed. Multi-levels of high-level definitions are possible,
+i.e., "create-does>" may be used multiple times within the
+.I <run-time-definition>.
+.TP
+.B
+code execution ( -- )
+Used in the following form:
+.br
+.B :
+.I <name>
+.B ( ... ) ...
+.I <colon-definition>
+.B ...
+.B ;
+.B execution
+.br
+Marks the most recently created dictionary entry as a word
+which is only available in execution mode.
+.TP
+.B
+code here ( -- addr)
+The address of the next available dictionary location.
+.TP
+.B
+code immediate ( -- )
+Used in the following form:
+.br
+.B :
+.I <name>
+.B ( ... ) ...
+.I <colon-definition>
+.B ...
+.B ;
+.B immediate
+.br
+Marks the most recently created dictionary entry as a word
+which will be executed when encountered during compilation
+rather than compiled.
+.TP
+.B
+code interpret ( -- )
+The forth top-loop; scan, locates, compiles and interprets symbols.
+The top-loop may be left with the word "bye".
+.TP
+.B
+code literal ( n -- ) immediate compilation
+Typically used in the following form:
+.br
+.B [
+.I <expression>
+.B ]
+.B literal
+.br
+At execution time "n" will be left on the parameter stack.
+.TP
+.B
+create pad ( -- addr)
+The lower address of a scratch area used to hold data form
+intermediate processing. The address or contents of "pad" may
+change and the data lost if the address of the next available
+dictionary location is changed. The minimum capacity of "pad"
+is minimum of 84 characters (bytes).
+.TP
+.B
+code private ( -- )
+Used in the following form:
+.br
+.B :
+.I <name>
+.B ( ... ) ...
+.I <colon-definition>
+.B ...
+.B ;
+.B private
+.br
+Marks the most recently created dictionary entry as a word
+which is only available in the dictionary it is created in.
+The word is not available when the dictionary is not the
+definitions vocabulary, "current".
+.TP
+.B
+code quit ( -- )
+Clears the parameter stack and performs the function of "interpret".
+Starts the forth interpreter and compiler.
+.TP
+.B
+code recognizer ( -- )
+Used in the following form:
+.br
+.B :
+.I <name>
+.B 
+( str -- [str false] or [x true]) ...
+.I <colon-definition>
+.B ...
+.B ;
+.B recognizer
+.br
+Marks the most recently created dictionary entry as a word
+which will perform the literal recognition function. Executed
+by "interpret" when an "entry" has not been found. The recognizer
+function for "forth" is "?number" and "?float" for "float".
+.TP
+.B
+variable state ( -- addr)
+The address of a variable containing the compilation state.
+True indicated compilation is occurring, false that text
+interpretation is occurring. A Standard Program may not modify
+this variable and should instead use "[" and "]" to alter mode.
+.TP
+.B
+create tib ( -- addr)
+The address of the text input buffer. This buffer is used to
+hold characters when the input stream is coming from the current
+input device. The minimum capacity of "tib" is 256 characters.
+.TP
+.B
+code word ( char -- addr)
+Generates a null-terminated string by non-destructively accepting
+characters from the input stream until the delimiter character
+code or a control character is encounter or the input stream
+is exhausted. Leading delimiters and control characters are
+ignored. The entire character string is stored in memory
+beginning at "addr" as a sequence of bytes.
+.SS "Vocabulary"
+The Forth-83 standard vocabulary management functions. The
+.IR tile
+forth kernel extends the basic function set with primitive entry
+lookup and literal recognition. Each vocabulary may have a literal
+recognition function which is automatically applied by "interpret"
+when the entry lookup fails. This allows easy extension of the input
+syntax for literal symbols. For examples see the "float" and the
+"rationals" vocabularies and files.
+.TP
+.B
+code ' ( -- addr)
+Used in the form:
+.br
+.B '
+.I <name>
+.B ( -- addr)
+.br
+"addr" is the compilation address of
+.I <name>.
+Gives an error message if
+.I <name>
+is not found in the current active search order, "context".
+.TP
+.B
+code ['] ( -- addr) immediate compilation
+Used in the form:
+.br
+.B [']
+.I <name>
+.B ( -- addr)
+.br
+Compiles the compilation address of
+.I <name>
+as a literal. When the colon definition is later executed "addr"
+is left on the stack. If
+.I <name>
+is not found an error message is given.
+.TP
+.B
+set context ( -- addr)
+Variable containing the set of vocabularies in the search chain. The
+set is represented as a vector set in the
+.I tile
+forth kernel and may be manipulated with the functions from the "sets"
+extension.
+.TP
+.B
+variable current ( -- addr)
+Variable containing a pointer to the current vocabulary for
+definitions.
+.TP
+.B
+code definitions ( -- )
+The compilation vocabulary, "current", is changed to be the
+same as the first vocabulary in the search order, "context".
+.TP
+.B
+code find ( addr1 -- addr2 n)
+"addr1" is the address of a null-ended string. The string
+contains a word name to located in the currently active
+search order. If the word is not found, "addr2" is the
+string and "n" is false. If the word is found, "addr2" is
+the compilation address and "n" is set to one of two non-
+zero values. If the word found has the immediate attribute
+set, "n" is one. If the word is non-immediate, n is minus
+one (true).
+.TP
+.B
+code forget ( -- )
+Used in the form:
+.br
+.B forget
+.I <name>
+.B ( -- )
+.br
+If
+.I <name>
+is found in the compilation vocabulary, delete
+.I <name>
+from the dictionary and all words added to the
+dictionary after
+.I <name>
+regardless of their vocabulary. Failure to find
+.I <name>
+is an error condition. An error condition also exists
+if the compilation vocabulary is deleted.
+.TP
+.B
+vocabulary forth ( -- )
+The name of the primary vocabulary. Execution replaces the
+first vocabulary in the search order with "forth". "forth" is
+initially the compilation vocabulary and the first vocabulary
+in the search order. New definitions become part of the "forth"
+vocabulary until a different compilation vocabulary is established.
+.TP
+.B
+code forth-83 ( -- )
+Assures that a Forth-83 Standard System is available.
+.TP
+.B
+code last ( -- addr)
+Returns the compilation address of the latest defined entry
+in the current vocabulary.
+.TP
+.B
+code lookup ( addr1 vocabulary -- addr2 n)
+"addr1" is the address of a null-ended string which is to be
+located in the "vocabulary" given as a parameter. If the word
+is not found, "addr2" is the string and "n" is false. If the
+word is found, "addr2" is the compilation address and "n" is
+set to one of two non-zero values. If the word found has the
+immediate attribute set, "n" is one. If the word is non-immediate,
+"n" is minus one.
+.TP
+.B
+code only ( -- )
+The compilation vocabulary, "current", is changed to be the
+same as the first vocabulary in the search order, "context".
+And all vocabularies except the first is removed from the
+search list.
+.TP
+.B
+code recognize ( addr1 -- [addr1 false] or [addr2 true])
+"addr1" is the address of a null-ended string. The string
+is tested by each recognizer function in the currently
+active search order. If recognized the function will return
+the literal value in "addr2" and "true". In other cases the
+string is returned with "false". The recognizer functions
+for the "forth" and "float" vocabularies are "?number" and
+"?float".
+.TP
+.B
+code restore ( entry -- )
+Restores "current" to the parameter entry. Any words defined
+after "entry" are unlinked form the vocabulary. This is useful
+for realizing lexical levels in forth. The lookup function
+cache is also flushed. An "nil" parameter will flush the whole
+cache.
+.TP
+.B
+code seal ( -- )
+The first (top) vocabulary is removed from the set of search
+vocabularies, "context". This allows lexical levels using
+vocabularies.
+.TP
+.B
+code words ( -- ) immediate
+Display the visible words in the current search chain, "context".
+.SS "Defining Words"
+The Forth-83 standard defining functions. The
+.IR tile
+forth kernel extends the Forth-83 Standard with additional functions
+for creating vocabulary entries, fields, and forward declaration.
+.TP
+.B
+code : ( -- )
+A defining word executed in the following form:
+.br
+.B :
+.I <name>
+.B ( ... )
+.B ...
+.I <colon-definition>
+.B ...
+.B ;
+.br
+Create a word definition for
+.I <name>
+in the compilation vocabulary
+and set compilation state. The text from the input stream is
+subsequently compiled.
+.I <name>
+is called a "colon definition".
+.TP
+.B
+code ; ( -- ) immediate compilation
+Stops compilation of a colon definitions, sets interpret state.
+Additional actions may be taken for local variables and argument
+frames and an exception block.
+.TP
+.B
+code code ( addr -- )
+Used in the following form:
+.br
+.I <addr>
+.B code
+.I <name>
+.B ( ... )
+.br
+to create a kernel primitive which will execute code at the given
+address, "addr", when used. The "address" is assumed to be a pointer
+to a parameter-less procedure.
+.TP
+.B
+code constant ( value -- )
+A defining word executed in the following form:
+.br
+.I <value>
+.B constant
+.I <name>
+.B ( -- value)
+.br
+Create a dictionary entry form
+.I <name>
+so that when
+.I <name>
+is later executed,
+.I <value>
+will be left on the stack.
+.TP
+.B
+code create ( -- )
+A defining word executed in the following form:
+.br
+.B create
+.I <name>
+.B ( -- addr)
+.br
+Create a dictionary entry for
+.I <name>.
+After
+.I <name>
+is created, the next available dictionary location is the first byte of
+.I <name>'s
+parameter field. When
+.I <name>
+is subsequently executed, the address of the first byte of
+.I <name>'s
+parameter field is left on the stack. "create" does not allocate space in
+.I <name>'s
+parameter field. The dictionary location is always aligned before the
+entry is created.
+.TP
+.B
+code entry ( parameter mode code name -- )
+Creates a new entry in the current definitions vocabulary
+with the given arguments. The entry becomes the "last" entry
+in the vocabulary.
+.TP
+.B
+code field ( offset -- )
+Used in the following form:
+.br
+.I <offset>
+.B field
+.I <name>
+.B ( addr1 -- addr2)
+.br
+When later
+.I <name>
+is used it will add the
+.I <offset>
+to the top of the parameter stack.
+.TP
+.B
+code forward ( -- )
+Used in the following form to define a symbol which will
+be defined later:
+.br
+.B forward
+.I <name>
+.B ( ... )
+.br
+If the symbol is executed it will indirectly execute "abort".
+When the symbol is later defined the forwarded symbol is
+automatically redirected to the newly created symbol.
+.TP
+.B
+code variable ( -- )
+A defining word executed in the following form:
+.br
+.B variable
+.I <name>
+.B ( -- addr)
+.br
+A dictionary entry for
+.I <name>
+is created and four bytes are allocated in its parameter field.
+This parameter field is to be used for contents of the variable.
+The application is responsible for initializing the contents of
+the variable which is created. When
+.I <name>
+is later executed, the address of its parameter field is placed
+on the stack.
+.TP
+.B
+code vocabulary ( -- )
+A defining word executed in the following form :
+.br
+.B vocabulary
+.I <name>
+.B ( -- )
+.br
+A dictionary entry for
+.I <name>
+is created which specifies a new ordered list of word definitions.
+Subsequent execution of
+.I <name>
+replaces the first vocabulary in the search order with
+.I <name>.
+When
+.I <name>
+becomes the compilation vocabulary new definitions will be appended to
+.I <name>'s
+list.
+.SH INTERNALS
+For the internal data structures of the
+.IR tile
+forth kernel see the source files "internals.f83" and the manual
+file "internals". The C definition of the data structures may be
+found in the file "kernel.h".
+.SH "SEE ALSO"
+.IR tile(1),
+.IR memory(3X),
+.IR compiler(3X),
+.IR locals(3X),
+.IR exceptions(3X),
+.IR float(3X),
+.IR string(3X),
+.IR queues(3X),
+.IR multi-tasking(3X).
+.\" .SH EXAMPLES
+.SH NOTE
+The function lists are sorted in ASCII order. The type and mode of
+the entries are indicated together with their parameter stack effect.
+.\" .SH WARNING
+.\" .SH BUGS
+.SH COPYING
+Copyright (C) 1990 Mikael R.K. Patel
+.PP
+Permission is granted to make and distribute verbatim copies
+of this manual provided the copyright notice and this permission
+notice are preserved on all copies.
+.PP
+Permission is granted to copy and distribute modified versions
+of this manual under the conditions for verbatim copying,
+provided also that the section entitled "GNU General Public
+License" is included exactly as in the original, and provided
+that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of
+this manual into another language, under the above conditions
+for modified versions, except that the section entitled "GNU
+General Public License" may be included in a translation approved
+by the author instead of in the original English.
+.SH AUTHOR
+.nf
+Mikael R.K. Patel
+Computer Aided Design Laboratory (CADLAB)
+Department of Computer and Information Science
+Linkoping University
+S-581 83 LINKOPING
+SWEDEN
+Email: mip@ida.liu.se
+.if

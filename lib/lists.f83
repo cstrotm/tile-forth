@@ -1,0 +1,127 @@
+\
+\  SINGLE LINKED LISTS
+\
+\  Copyright (C) 1990 by Mikael R.K. Patel
+\
+\  Computer Aided Design Laboratory (CADLAB)
+\  Department of Computer and Information Science
+\  Linkoping University
+\  S-581 83 LINKOPING
+\  SWEDEN
+\
+\  Email: mip@ida.liu.se
+\
+\  Started on: 1 May 1990
+\
+\  Last updated on: 19 June 1990
+\
+\  Dependencies:
+\       (forth) forth, blocks
+\
+\  Description:
+\       Management of single linked lists. Requires that the list
+\       structures have the link as the first field.
+\
+\  Copying:
+\       This program is free software; you can redistribute it and\or modify
+\       it under the terms of the GNU General Public License as published by
+\       the Free Software Foundation; either version 1, or (at your option)
+\       any later version.
+\
+\       This program is distributed in the hope that it will be useful,
+\       but WITHOUT ANY WARRANTY; without even the implied warranty of
+\       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\       GNU General Public License for more details.
+\
+\       You should have received a copy of the GNU General Public License
+\       along with this program; see the file COPYING.  If not, write to
+\       the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+
+.( Loading Lists definitions...) cr
+
+#include blocks.f83
+
+vocabulary lists ( -- )
+
+blocks lists definitions
+
+: list ( -- )
+  create nil ,
+;
+
+: empty-list ( list -- )
+  nil swap !
+;
+
+: search-list ( element list -- [element last] or [false])
+  begin
+    2dup =
+    over @ 0= or not
+  while
+    @
+  repeat
+  dup @ if 2drop false then
+; private
+
+: append-list ( element list -- )
+  search-list ?dup if ! then
+;
+
+: insert-list ( element list -- )
+  2dup @ swap ! !
+;
+
+: size-list ( list -- num)
+  0 swap
+  begin
+    ?dup
+  while
+    swap 1+ swap @
+  repeat
+;
+
+: map-list ( list block[element -- ] -- )
+  >r
+  begin
+    ?dup
+  while
+    dup r@ swap >r
+    call
+    r> @
+  repeat
+  r> drop
+;
+
+: ?map-list ( list block[element -- bool] -- )
+  >r
+  begin
+    ?dup
+  while
+    dup r@ swap >r
+    call
+    if 2r> 2drop exit then
+    r> @
+  repeat
+  r> drop
+;
+
+: apply-list ( offset list -- )
+  begin
+    ?dup
+  while
+    2dup 2>r + @
+    execute
+    2r> @
+  repeat
+  drop
+;
+
+: ?member-list ( element list -- bool)
+  search-list if drop false else true then
+;
+
+: ?empty-list ( list -- bool)
+  0=
+;
+
+forth only
