@@ -142,11 +142,11 @@ typedef struct _entry {
 /* NORMAL ENTRY GENERATORS */
 
 #define NORMAL_CONSTANT(v, l, n, p) \
-    static entry v = \
+    entry v = \
        {(ENTRY) &l, n, NORMAL, CONSTANT, p};
 
 #define NORMAL_VARIABLE(v, l, n, p) \
-    static entry v = \
+    entry v = \
        {(ENTRY) &l, n, NORMAL, VARIABLE, p};
 
 
@@ -162,7 +162,7 @@ typedef struct {
 } vocabulary_entry, *VOCABULARY_ENTRY;
 
 #define NORMAL_VOCABULARY(v, l, n, p, r) \
-    static vocabulary_entry v = \
+    vocabulary_entry v = \
        {(ENTRY) &l, n, NORMAL, VOCABULARY, (ENTRY) p, (ENTRY) r};
 
 
@@ -178,23 +178,23 @@ typedef struct {
 
 
 #define NORMAL_CODE(v, l, n, s) \
-    static code_entry v = \
+    code_entry v = \
        {(ENTRY) &l, n, NORMAL, CODE, s};
 
 #define IMMEDIATE_CODE(v, l, n, s) \
-    static code_entry v = \
+    code_entry v = \
        {(ENTRY) &l, n, IMMEDIATE, CODE, s};
 
 #define COMPILATION_CODE(v, l, n, s) \
-    static code_entry v = \
+    code_entry v = \
        {(ENTRY) &l, n, COMPILATION, CODE, s};
 
 #define EXECUTION_CODE(v, l, n, s) \
-    static code_entry v = \
+    code_entry v = \
        {(ENTRY) &l, n, EXECUTION, CODE, s};
 
 #define COMPILATION_IMMEDIATE_CODE(v, l, n, s) \
-    static code_entry v = \
+    code_entry v = \
        {(ENTRY) &l, n, COMPILATION + IMMEDIATE, CODE, s};
 
 
