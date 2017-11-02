@@ -1,0 +1,3 @@
+*.f83 linguist-language=Forth
+*.tst linguist-language=Forth
+*.v  linguist-language=c
